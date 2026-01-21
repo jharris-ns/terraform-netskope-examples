@@ -56,7 +56,7 @@ publisher-azure/
 ├── azure-compute.tf     # Virtual machines
 ├── outputs.tf           # Output values
 ├── templates/
-│   └── cloud-init.yaml  # Cloud-init configuration
+│   └── bootstrap.tpl    # Bootstrap script for publisher registration
 └── terraform.tfvars     # Variable values
 ```
 
@@ -70,8 +70,8 @@ terraform {
 
   required_providers {
     netskope = {
-      source  = "netskope/netskope"
-      version = ">= 0.3.0"
+      source  = "netskopeoss/netskope"
+      version = ">= 0.3.3"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -129,9 +129,9 @@ variable "vm_size" {
 }
 
 variable "admin_username" {
-  description = "Admin username for VMs"
+  description = "Admin username for VMs (must be 'ubuntu' for Netskope publisher image)"
   type        = string
-  default     = "azureuser"
+  default     = "ubuntu"
 }
 
 variable "ssh_public_key_path" {
@@ -162,10 +162,16 @@ variable "deploy_ha" {
   default     = true
 }
 
-variable "publisher_docker_tag" {
-  description = "Publisher Docker image tag (leave empty for latest)"
+variable "publisher_image_sku" {
+  description = "Netskope Publisher image SKU from Azure Marketplace"
   type        = string
-  default     = ""
+  default     = "netskope-npa-publisher"
+}
+
+variable "publisher_image_version" {
+  description = "Netskope Publisher image version (use 'latest' for most recent)"
+  type        = string
+  default     = "latest"
 }
 ```
 
@@ -174,19 +180,6 @@ variable "publisher_docker_tag" {
 Create `netskope.tf`:
 
 ```hcl
-# =============================================================================
-# Netskope Data Sources
-# =============================================================================
-
-data "netskope_npa_publishers_releases_list" "all" {}
-
-locals {
-  publisher_tag = var.publisher_docker_tag != "" ? var.publisher_docker_tag : [
-    for r in data.netskope_npa_publishers_releases_list.all.data : r.docker_tag
-    if r.name == "Latest"
-  ][0]
-}
-
 # =============================================================================
 # Netskope Publishers
 # =============================================================================
@@ -355,28 +348,16 @@ resource "azurerm_subnet_network_security_group_association" "publisher" {
 }
 ```
 
-## Step 5: Cloud-Init Template
+## Step 5: Bootstrap Script Template
 
-Create `templates/cloud-init.yaml`:
+Create `templates/bootstrap.tpl`:
 
-```yaml
-#cloud-config
-package_update: true
-package_upgrade: true
-
-packages:
-  - docker.io
-  - curl
-
-runcmd:
-  - systemctl enable docker
-  - systemctl start docker
-  - sleep 10
-  - docker pull netskope/publisher:${docker_tag}
-  - docker run -d --name npa-publisher --restart always --net=host --cap-add NET_ADMIN -e PUBLISHER_TOKEN="${publisher_token}" netskope/publisher:${docker_tag}
-
-final_message: "Netskope Publisher installation complete after $UPTIME seconds"
+```bash
+#!/bin/bash
+sudo /home/ubuntu/npa_publisher_wizard -token ${token}
 ```
+
+This script runs automatically when the VM boots and registers the publisher with your Netskope tenant using the `npa_publisher_wizard` utility that is pre-installed on the Netskope Marketplace image.
 
 ## Step 6: Azure Virtual Machines
 
@@ -443,19 +424,27 @@ resource "azurerm_linux_virtual_machine" "primary" {
 
   os_disk {
     caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
+    storage_account_type = "Premium_LRS"
   }
 
+  # Netskope Publisher Marketplace Image
   source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
+    publisher = "netskope"
+    offer     = "netskope-npa-publisher"
+    sku       = var.publisher_image_sku
+    version   = var.publisher_image_version
   }
 
-  custom_data = base64encode(templatefile("${path.module}/templates/cloud-init.yaml", {
-    publisher_token = netskope_npa_publisher_token.primary.token
-    docker_tag      = local.publisher_tag
+  # Required for Marketplace images
+  plan {
+    name      = var.publisher_image_sku
+    publisher = "netskope"
+    product   = "netskope-npa-publisher"
+  }
+
+  # Bootstrap script to register publisher with Netskope
+  custom_data = base64encode(templatefile("${path.module}/templates/bootstrap.tpl", {
+    token = netskope_npa_publisher_token.primary.token
   }))
 
   tags = {
@@ -486,19 +475,27 @@ resource "azurerm_linux_virtual_machine" "secondary" {
 
   os_disk {
     caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
+    storage_account_type = "Premium_LRS"
   }
 
+  # Netskope Publisher Marketplace Image
   source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
+    publisher = "netskope"
+    offer     = "netskope-npa-publisher"
+    sku       = var.publisher_image_sku
+    version   = var.publisher_image_version
   }
 
-  custom_data = base64encode(templatefile("${path.module}/templates/cloud-init.yaml", {
-    publisher_token = netskope_npa_publisher_token.secondary[0].token
-    docker_tag      = local.publisher_tag
+  # Required for Marketplace images
+  plan {
+    name      = var.publisher_image_sku
+    publisher = "netskope"
+    product   = "netskope-npa-publisher"
+  }
+
+  # Bootstrap script to register publisher with Netskope
+  custom_data = base64encode(templatefile("${path.module}/templates/bootstrap.tpl", {
+    token = netskope_npa_publisher_token.secondary[0].token
   }))
 
   tags = {
@@ -592,28 +589,73 @@ terraform apply
 
 ## Verifying the Deployment
 
-### Check VM Status
+### Check Publisher Status in Netskope Admin Console
+
+1. Log in to your Netskope tenant
+2. Navigate to **Settings** > **Security Cloud Platform** > **Publishers**
+3. Verify your publishers show a **Connected** status
+
+### Check VM Status via SSH
 
 ```bash
-# SSH to VM (if you have network access)
-ssh azureuser@<private-ip>
+# SSH to VM using the ubuntu user (required for Netskope publisher image)
+ssh -i <your_private_ssh.key> ubuntu@<public-ip>
 
-# Check cloud-init status
-cloud-init status
+# Check publisher registration status
+sudo /home/ubuntu/npa_publisher_wizard -status
 
-# View cloud-init logs
-sudo cat /var/log/cloud-init-output.log
-
-# Check Docker container
-sudo docker ps
-sudo docker logs npa-publisher
+# View system logs
+sudo journalctl -u npa-publisher
 ```
 
 ### Using Azure Serial Console
 
 1. Navigate to the VM in Azure Portal
 2. Go to **Help** > **Serial console**
-3. Log in and check Docker status
+3. Log in with username `ubuntu`
+4. Run `sudo /home/ubuntu/npa_publisher_wizard -status` to check registration
+
+### Manual Registration (if needed)
+
+If the publisher was not automatically registered during deployment, you can manually register:
+
+```bash
+sudo /home/ubuntu/npa_publisher_wizard -token <YOUR_PUBLISHER_TOKEN>
+```
+
+## Private Subnet and Outbound Connectivity
+
+This deployment places publishers in a **private subnet** with no direct public IP addresses on the VMs. Outbound connectivity to Netskope cloud services is provided through the **NAT Gateway**:
+
+- The NAT Gateway has a static public IP assigned
+- The subnet is associated with the NAT Gateway
+- All outbound traffic from VMs is routed through the NAT Gateway
+- NSG rules allow outbound HTTPS (443) and DNS (53) to the Internet
+
+This architecture ensures:
+- Publishers can reach Netskope cloud services (`*.goskope.com`, `*.netskope.com`)
+- VMs are not directly exposed to the Internet
+- Outbound traffic uses a consistent public IP (useful for firewall rules)
+
+## Connecting to VMs in Private Subnets
+
+Since the VMs have no public IPs, you need an alternative method for SSH access. **Azure Bastion** is the recommended approach:
+
+1. Deploy a Bastion host into a special subnet called `AzureBastionSubnet` in your VNet
+2. Bastion gets a public IP - users connect via HTTPS (443) through the Azure Portal
+3. Bastion has internal VNet access and can reach all VMs via their private IPs
+
+**Connection flow:**
+```
+User (Browser) → HTTPS (443) → Azure Portal → Azure Bastion → SSH (private IP) → VM
+```
+
+No agent or client is needed - SSH runs in your browser via HTML5. The VM never needs a public IP or inbound NSG rules for SSH.
+
+**Other connectivity options:**
+- **Jump host** - Deploy a VM with a public IP to SSH through
+- **VPN Gateway** - Site-to-site or point-to-site VPN access
+- **Azure Serial Console** - Emergency access via Azure Portal
 
 ## Cleanup
 

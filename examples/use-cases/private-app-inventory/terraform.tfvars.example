@@ -1,0 +1,87 @@
+# =============================================================================
+# Provider Credentials
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values
+
+# Netskope credentials (from Settings > Tools > REST API v2)
+netskope_api_key    = "your-netskope-api-key"
+netskope_server_url = "https://your-tenant.goskope.com/api/v2"
+
+# =============================================================================
+# Publisher Configuration
+# =============================================================================
+# Names must match existing publishers in your Netskope tenant
+
+environment              = "production"
+primary_publisher_name   = "primary-publisher"
+secondary_publisher_name = "secondary-publisher"  # Optional, set to "" if not using HA
+
+common_tags = [
+  "managed-by-terraform",
+  "team-platform"
+]
+
+# =============================================================================
+# Web Applications
+# =============================================================================
+# Note: real_host must be FQDN (not IP) for https apps
+
+web_apps = {
+  jira = {
+    hostname  = "jira.internal.example.com"
+    real_host = "jira-server.internal.example.com"  # Must be FQDN for https
+    port      = "443"
+    tags      = ["devtools"]
+  }
+
+  confluence = {
+    hostname  = "wiki.internal.example.com"
+    real_host = "confluence-server.internal.example.com"
+    port      = "443"
+    tags      = ["devtools"]
+  }
+}
+
+# =============================================================================
+# Database Applications
+# =============================================================================
+
+database_apps = {
+  postgres-main = {
+    hostname  = "postgres.internal.example.com"
+    real_host = "10.0.3.10"  # Can be IP for non-https
+    port      = "5432"
+    tags      = ["primary-db"]
+  }
+
+  redis = {
+    hostname  = "redis.internal.example.com"
+    real_host = "10.0.3.20"
+    port      = "6379"
+    tags      = ["cache"]
+  }
+}
+
+# =============================================================================
+# Infrastructure Applications
+# =============================================================================
+# Note: real_host must be single IP or FQDN (not CIDR range)
+# Note: SSH/RDP/VNC require clientless_access = true (set in apps-infrastructure.tf)
+
+infra_apps = {
+  ssh-jumpbox = {
+    hostname  = "jumpbox.internal.example.com"
+    real_host = "10.0.0.10"  # Single IP only, no CIDR
+    port      = "22"
+    app_type  = "ssh"
+    tags      = ["admin-access"]
+  }
+
+  rdp-windows = {
+    hostname  = "windows.internal.example.com"
+    real_host = "10.0.4.50"
+    port      = "3389"
+    app_type  = "rdp"
+    tags      = ["windows-admin"]
+  }
+}

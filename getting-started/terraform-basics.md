@@ -329,9 +329,8 @@ my-project/
 
 Now that you understand the basics:
 
-1. **[Getting Started Guide](./getting-started.md)** - Set up the Netskope provider and create your first resource
-2. **[Authentication Guide](./authentication.md)** - Secure credential management
-3. **[Finding Values Guide](./finding-values.md)** - How to discover publisher IDs and other values
+1. **[Quick Start Guide](./quick-start.md)** - Set up the Netskope provider and create your first resource
+2. **[Best Practices](../guides/best-practices.md)** - Project structure, naming conventions, and security
 
 ---
 

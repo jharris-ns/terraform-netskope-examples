@@ -1,0 +1,3 @@
+environment     = "production"
+datacenter_name = "us-west-dc1"
+admin_groups    = ["Infrastructure-Admins", "SRE-Team"]

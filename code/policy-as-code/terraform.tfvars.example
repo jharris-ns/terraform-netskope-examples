@@ -1,0 +1,26 @@
+environment = "production"
+
+# Map these to your actual IdP groups
+admin_groups = [
+  "IT-Administrators",
+  "SRE-Team"
+]
+
+developer_groups = [
+  "Engineering",
+  "Developers"
+]
+
+dba_groups = [
+  "Database-Admins"
+]
+
+blocked_groups = [
+  "Terminated-Users",
+  "Security-Quarantine"
+]
+
+# Tags used in your private app definitions
+web_app_tags            = ["web-tier"]
+database_app_tags       = ["database-tier"]
+infrastructure_app_tags = ["infrastructure", "ssh"]

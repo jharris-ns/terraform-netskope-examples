@@ -1,4 +1,4 @@
-do # Best Practices Guide
+# Best Practices Guide
 
 This guide covers recommended patterns and practices for managing Netskope NPA resources with Terraform.
 

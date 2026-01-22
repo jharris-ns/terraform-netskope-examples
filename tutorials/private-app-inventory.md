@@ -17,6 +17,17 @@ You have multiple private applications that need to be:
 - Terraform 1.0+ installed
 - Basic familiarity with Terraform
 
+## Run the Code
+
+Ready-to-deploy Terraform configurations are available in [`code/private-app-inventory/`](../code/private-app-inventory/). You can deploy immediately and follow along with this tutorial for detailed explanations.
+
+```bash
+cd code/private-app-inventory
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
+terraform init && terraform plan && terraform apply
+```
+
 ## Project Structure
 
 ```
@@ -42,8 +53,8 @@ terraform {
 
   required_providers {
     netskope = {
-      source  = "netskope/netskope"
-      version = ">= 0.3.0"
+      source  = "netskopeoss/netskope"
+      version = ">= 0.3.3"
     }
   }
 }

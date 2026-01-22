@@ -75,7 +75,7 @@ Create `main.tf`:
 terraform {
   required_providers {
     netskope = {
-      source  = "netskope/netskope"
+      source  = "netskopeoss/netskope"
     }
   }
 }
@@ -129,8 +129,8 @@ terraform {
 
   required_providers {
     netskope = {
-      source  = "netskope/netskope"
-      version = ">= 0.3.0"
+      source  = "netskopeoss/netskope"
+      version = ">= 0.3.3"
     }
   }
 }
@@ -147,7 +147,7 @@ provider "netskope" {}
 # =============================================================================
 
 # List all publishers to find one to assign to our app
-# See: ../data-sources/npa_publishers_list.md
+# See: https://registry.terraform.io/providers/netskopeoss/netskope/latest/docs/data-sources/npa_publishers_list
 data "netskope_npa_publishers_list" "all" {}
 
 # =============================================================================
@@ -165,7 +165,7 @@ locals {
 # =============================================================================
 
 # Create a private application
-# See: ../resources/npa_private_app.md
+# See: https://registry.terraform.io/providers/netskopeoss/netskope/latest/docs/resources/npa_private_app
 resource "netskope_npa_private_app" "my_first_app" {
   # Application identity
   private_app_name     = "my-first-terraform-app"
@@ -313,9 +313,10 @@ assigned_publisher = "us-west-dc1-primary"
 
 ## Next Steps
 
-- **[Finding Values Guide](./finding-values.md)** - Learn how to discover publisher IDs, policy groups, and other values
-- **[Authentication Guide](./authentication.md)** - Secure credential management options
-- **[Troubleshooting Guide](./troubleshooting.md)** - Common errors and solutions
+- **[Private App Inventory](../tutorials/private-app-inventory.md)** - Manage multiple apps at scale
+- **[Publisher on AWS](../tutorials/publisher-aws.md)** - Deploy publishers in AWS
+- **[Policy as Code](../tutorials/policy-as-code.md)** - Manage access rules with Terraform
+- **[API Reference](https://registry.terraform.io/providers/netskopeoss/netskope/latest/docs)** - Full resource and data source documentation
 
 ## Common Issues
 

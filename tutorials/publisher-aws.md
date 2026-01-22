@@ -66,6 +66,17 @@ This tutorial shows how to deploy Netskope NPA publishers in AWS using the Marke
 - Terraform 1.0+ installed
 - Subscribe to the [Netskope Publisher AMI](https://aws.amazon.com/marketplace/pp/prodview-xxxxxxx) in AWS Marketplace
 
+## Run the Code
+
+Ready-to-deploy Terraform configurations are available in [`code/publisher-aws/`](../code/publisher-aws/). You can deploy immediately and follow along with this tutorial for detailed explanations.
+
+```bash
+cd code/publisher-aws
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
+terraform init && terraform plan && terraform apply
+```
+
 ## Network Requirements
 
 Publishers require outbound HTTPS (443) access to:
@@ -129,8 +140,8 @@ terraform {
 
   required_providers {
     netskope = {
-      source  = "netskope/netskope"
-      version = ">= 0.3.0"
+      source  = "netskopeoss/netskope"
+      version = ">= 0.3.3"
     }
     aws = {
       source  = "hashicorp/aws"
@@ -529,8 +540,8 @@ terraform {
 
   required_providers {
     netskope = {
-      source  = "netskope/netskope"
-      version = ">= 0.3.0"
+      source  = "netskopeoss/netskope"
+      version = ">= 0.3.3"
     }
     aws = {
       source  = "hashicorp/aws"
@@ -958,5 +969,4 @@ terraform destroy
 
 - [Private App Inventory Tutorial](./private-app-inventory.md) - Create applications
 - [Policy as Code Tutorial](./policy-as-code.md) - Create access rules
-- [Publisher Azure Tutorial](./publisher-azure.md) - Deploy in Azure
-- [Publisher GCP Tutorial](./publisher-gcp.md) - Deploy in GCP
+- [Best Practices Guide](../guides/best-practices.md) - Project organization patterns

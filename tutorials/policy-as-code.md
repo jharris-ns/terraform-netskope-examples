@@ -35,6 +35,17 @@ Rules are evaluated top-to-bottom. First matching rule wins.
 - User groups configured in your IdP
 - Terraform 1.0+ installed
 
+## Run the Code
+
+Ready-to-deploy Terraform configurations are available in [`code/policy-as-code/`](../code/policy-as-code/). You can deploy immediately and follow along with this tutorial for detailed explanations.
+
+```bash
+cd code/policy-as-code
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
+terraform init && terraform plan && terraform apply
+```
+
 ## Project Structure
 
 ```
@@ -61,8 +72,8 @@ terraform {
 
   required_providers {
     netskope = {
-      source  = "netskope/netskope"
-      version = ">= 0.3.0"
+      source  = "netskopeoss/netskope"
+      version = ">= 0.3.3"
     }
   }
 }
@@ -141,13 +152,13 @@ Create `data.tf`:
 # Discover Existing Resources
 # =============================================================================
 
-# Policy groups - see: ../data-sources/npa_policy_groups_list.md
+# Policy groups - see: https://registry.terraform.io/providers/netskopeoss/netskope/latest/docs/data-sources/npa_policy_groups_list
 data "netskope_npa_policy_groups_list" "all" {}
 
-# Private apps (to reference by name in rules) - see: ../data-sources/npa_private_apps_list.md
+# Private apps - see: https://registry.terraform.io/providers/netskopeoss/netskope/latest/docs/data-sources/npa_private_apps_list
 data "netskope_npa_private_apps_list" "all" {}
 
-# Existing rules (for ordering) - see: ../data-sources/npa_rules_list.md
+# Existing rules - see: https://registry.terraform.io/providers/netskopeoss/netskope/latest/docs/data-sources/npa_rules_list
 data "netskope_npa_rules_list" "all" {}
 
 # =============================================================================

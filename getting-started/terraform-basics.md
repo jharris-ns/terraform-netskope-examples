@@ -39,8 +39,8 @@ A **provider** is a plugin that connects Terraform to a specific service. The Ne
 terraform {
   required_providers {
     netskope = {
-      source  = "netskope/netskope"
-      version = ">= 0.3.0"
+      source  = "netskopeoss/netskope"
+      version = ">= 0.3.3"
     }
   }
 }

@@ -1,65 +1,77 @@
-# Netskope Terraform Examples & Guides
+# Netskope Terraform Examples
 
-Learn how to manage Netskope Private Access (NPA) using Terraform with hands-on tutorials and working examples.
+Learn how to use the [Netskope Terraform Provider](https://registry.terraform.io/providers/netskopeoss/netskope/latest) through hands-on tutorials and working examples.
 
-## Who is this for?
+**Why manage NPA with Terraform?**
+- Version control your private app and policy configurations
+- Automate publisher deployments across cloud environments
+- Reduce manual configuration and human error
 
-- **Netskope administrators** who want to manage NPA using Infrastructure as Code
-- **Platform engineers** deploying publishers in AWS, Azure, or GCP
-- **Security teams** implementing policy-as-code for access controls
+## Examples
 
-**New to Terraform?** Start with [Terraform Basics](./getting-started/terraform-basics.md).
+All examples are in the [`code/`](./code/) directory with deployment instructions.
 
-## Contents
-
-### Getting Started
-
-| Guide | Description |
-|-------|-------------|
-| [Terraform Basics](./getting-started/terraform-basics.md) | What is Terraform? Key concepts for beginners |
-| [Quick Start](./getting-started/quick-start.md) | Create your first private app in 10 minutes |
-| [Installation](./getting-started/installation.md) | Provider setup and authentication |
-
-### Tutorials
-
-| Tutorial | Description | Level |
-|----------|-------------|-------|
-| [Private App Inventory](./tutorials/private-app-inventory.md) | Manage apps at scale with variables and loops | Intermediate |
-| [Publisher on AWS](./tutorials/publisher-aws.md) | Deploy publishers in AWS with VPC and NAT Gateway | Intermediate |
-| [Publisher on Azure](./tutorials/publisher-azure.md) | Deploy publishers in Azure | Intermediate |
-| [Publisher on GCP](./tutorials/publisher-gcp.md) | Deploy publishers in Google Cloud | Intermediate |
-| [Policy as Code](./tutorials/policy-as-code.md) | Manage NPA access rules with Terraform | Advanced |
-
-### Guides
-
-| Guide | Description |
-|-------|-------------|
-| [Best Practices](./guides/best-practices.md) | Project structure, naming, state management |
-| [CI/CD Integration](./guides/ci-cd-integration.md) | GitHub Actions, GitLab CI workflows |
-
-### Working Examples
+### Application Management
 
 | Example | Description |
 |---------|-------------|
-| [examples/use-cases/](./examples/use-cases/) | Complete scenarios: browser apps, client apps, full deployments |
-| [examples/cloud-deployments/](./examples/cloud-deployments/) | Tested Terraform configs for AWS, Azure, GCP |
+| [browser-app](./code/browser-app/) | Browser-accessible private application |
+| [client-app](./code/client-app/) | SSH, RDP, and database access via NPA client |
+| [private-app-inventory](./code/private-app-inventory/) | Manage multiple apps at scale with variables |
+
+### Publisher Deployment
+
+| Example | Description |
+|---------|-------------|
+| [publisher-management](./code/publisher-management/) | Publisher lifecycle and upgrades |
+| [publisher-aws](./code/publisher-aws/) | Deploy NPA publisher in AWS with VPC and NAT |
+
+### Policy & Access Control
+
+| Example | Description |
+|---------|-------------|
+| [policy-as-code](./code/policy-as-code/) | Access policies with deny rules and ordering |
+
+### Complete Solutions
+
+| Example | Description |
+|---------|-------------|
+| [full-deployment](./code/full-deployment/) | End-to-end NPA setup: publishers, apps, and policies |
+
+## Where to Start
+
+| Goal | Guide |
+|------|-------|
+| New to Terraform | [Terraform Basics](./getting-started/terraform-basics.md) |
+| Deploy your first private app | [Quick Start](./getting-started/quick-start.md) |
+| Project structure and naming | [Best Practices](./guides/best-practices.md) |
+
+## Quick Start
+
+```bash
+git clone https://github.com/netskopeoss/terraform-netskope-examples.git
+cd terraform-netskope-examples/code/browser-app
+
+export NETSKOPE_SERVER_URL="https://your-tenant.goskope.com/api/v2"
+export NETSKOPE_API_KEY="your-api-token"
+
+terraform init && terraform apply
+```
+
+For detailed setup instructions, see the [Quick Start guide](./getting-started/quick-start.md).
 
 ## Prerequisites
 
-- Netskope tenant with REST API v2 access
-- Terraform 1.0 or later
-- For cloud tutorials: AWS/Azure/GCP account with appropriate permissions
+- Netskope tenant with REST API v2 access ([setup guide](./getting-started/quick-start.md#step-1-create-an-api-key))
+- Terraform >= 1.0
+- For AWS examples: AWS CLI configured with appropriate permissions
 
-## Quick Links
+## Resources
 
-- [Netskope Terraform Provider](https://registry.terraform.io/providers/netskope/netskope/latest) - Terraform Registry
-- [Provider Repository](https://github.com/netskope/terraform-provider-netskope) - Source code and API reference
+- [Netskope Terraform Provider](https://registry.terraform.io/providers/netskopeoss/netskope/latest) - Terraform Registry
+- [Provider Documentation](https://registry.terraform.io/providers/netskopeoss/netskope/latest/docs) - Resources and data sources
 - [Netskope Documentation](https://docs.netskope.com) - Product documentation
 
-## Contributing
+---
 
-Contributions welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before submitting PRs.
-
-## License
-
-[Apache 2.0](./LICENSE)
+[Contributing](./CONTRIBUTING.md) | [License](./LICENSE) (Apache 2.0)

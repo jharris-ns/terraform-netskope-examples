@@ -51,6 +51,19 @@ data "netskope_npa_publishers_list" "all" {}
 
 # Find the publisher by name, or use the first one if no name specified
 locals {
+  # Pattern: Conditional publisher selection with for-expression filtering
+  #
+  # How it works:
+  # 1. If var.publisher_name is provided (not null):
+  #    - Filter publishers list to find matching name
+  #    - [0] extracts the first match from the filtered list
+  # 2. If var.publisher_name is null:
+  #    - Simply use the first publisher in the list
+  #
+  # The result is a publisher object you can reference as:
+  #   local.publisher.publisher_id
+  #   local.publisher.publisher_name
+  #
   publisher = var.publisher_name != null ? (
     [for p in data.netskope_npa_publishers_list.all.data.publishers : p if p.publisher_name == var.publisher_name][0]
   ) : data.netskope_npa_publishers_list.all.data.publishers[0]

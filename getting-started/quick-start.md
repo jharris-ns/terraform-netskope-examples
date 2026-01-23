@@ -313,9 +313,9 @@ assigned_publisher = "us-west-dc1-primary"
 
 ## Next Steps
 
-- **[Private App Inventory](../tutorials/private-app-inventory.md)** - Manage multiple apps at scale
-- **[Publisher on AWS](../tutorials/publisher-aws.md)** - Deploy publishers in AWS
-- **[Policy as Code](../tutorials/policy-as-code.md)** - Manage access rules with Terraform
+- **[Private App Inventory](../examples/private-app-inventory/)** - Manage multiple apps at scale
+- **[Publisher on AWS](../examples/publisher-aws/)** - Deploy publishers in AWS
+- **[Policy as Code](../examples/policy-as-code/)** - Manage access rules with Terraform
 - **[API Reference](https://registry.terraform.io/providers/netskopeoss/netskope/latest/docs)** - Full resource and data source documentation
 
 ## Common Issues

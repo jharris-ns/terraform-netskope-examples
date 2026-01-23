@@ -19,7 +19,17 @@ locals {
     pg if pg.group_name == "Default"
   ][0]
 
-  # Group apps by tags for easy reference
+  # Group apps by tags for easy reference in policy rules
+  #
+  # This pattern:
+  # 1. Iterates through all private apps from the data source
+  # 2. Extracts just the app NAME (string) - not the full app object
+  # 3. Filters to apps that have at least one tag matching var.web_app_tags
+  #
+  # The result is a list of strings: ["app-one", "app-two", "app-three"]
+  # This format is required by netskope_npa_rules - the API expects app names
+  # as plain strings, not objects or nested arrays.
+  #
   web_apps = [
     for app in data.netskope_npa_private_apps_list.all.private_apps :
     app.private_app_name

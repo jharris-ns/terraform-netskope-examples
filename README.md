@@ -1,6 +1,6 @@
 # Netskope Terraform Examples
 
-Learn how to use the [Netskope Terraform Provider](https://registry.terraform.io/providers/netskopeoss/netskope/latest) through hands-on tutorials and working examples.
+Learn how to use the [Netskope Terraform Provider](https://registry.terraform.io/providers/netskopeoss/netskope/latest) through working examples.
 
 **Why manage NPA with Terraform?**
 - Version control your private app and policy configurations
@@ -9,34 +9,31 @@ Learn how to use the [Netskope Terraform Provider](https://registry.terraform.io
 
 ## Examples
 
-All examples are in the [`code/`](./code/) directory with deployment instructions.
+All examples are in the [`examples/`](./examples/) directory with deployment instructions.
 
-### Application Management
+Users with limited Terraform experience should first review [Patterns Used in Our Examples](./getting-started/terraform-basics.md#patterns-used-in-our-examples) for explanations of the patterns used throughout these examples.
 
-| Example | Description |
-|---------|-------------|
-| [browser-app](./code/browser-app/) | Browser-accessible private application |
-| [client-app](./code/client-app/) | SSH, RDP, and database access via NPA client |
-| [private-app-inventory](./code/private-app-inventory/) | Manage multiple apps at scale with variables |
-
-### Publisher Deployment
+### Simple
 
 | Example | Description |
 |---------|-------------|
-| [publisher-management](./code/publisher-management/) | Publisher lifecycle and upgrades |
-| [publisher-aws](./code/publisher-aws/) | Deploy NPA publisher in AWS with VPC and NAT |
+| [browser-app](./examples/browser-app/) | Browser-accessible private application |
+| [client-app](./examples/client-app/) | SSH, RDP, and database access via NPA client |
+| [publisher-management](./examples/publisher-management/) | Publisher lifecycle and upgrades |
 
-### Policy & Access Control
-
-| Example | Description |
-|---------|-------------|
-| [policy-as-code](./code/policy-as-code/) | Access policies with deny rules and ordering |
-
-### Complete Solutions
+### Intermediate
 
 | Example | Description |
 |---------|-------------|
-| [full-deployment](./code/full-deployment/) | End-to-end NPA setup: publishers, apps, and policies |
+| [private-app-inventory](./examples/private-app-inventory/) | Manage multiple apps at scale with variables |
+| [publisher-aws](./examples/publisher-aws/) | Deploy NPA publisher in AWS with VPC and NAT |
+| [policy-as-code](./examples/policy-as-code/) | Access policies with deny rules and ordering |
+
+### Advanced
+
+| Example | Description |
+|---------|-------------|
+| [full-deployment](./examples/full-deployment/) | End-to-end NPA setup: publishers, apps, and policies |
 
 ## Where to Start
 
@@ -50,7 +47,7 @@ All examples are in the [`code/`](./code/) directory with deployment instruction
 
 ```bash
 git clone https://github.com/netskopeoss/terraform-netskope-examples.git
-cd terraform-netskope-examples/code/browser-app
+cd terraform-netskope-examples/examples/browser-app
 
 export NETSKOPE_SERVER_URL="https://your-tenant.goskope.com/api/v2"
 export NETSKOPE_API_KEY="your-api-token"

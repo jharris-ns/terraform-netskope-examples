@@ -56,7 +56,21 @@ data "netskope_npa_publishers_list" "all" {}
 
 # Find the publisher by name, or use the first one if no name specified
 locals {
-  # If publisher_name is specified, find it; otherwise use the first publisher
+  # Pattern: Conditional publisher selection
+  #
+  # This demonstrates two common Terraform patterns:
+  #
+  # 1. Ternary operator (condition ? true_value : false_value)
+  #    - If var.publisher_name is set, search for that specific publisher
+  #    - If null, fall back to the first available publisher
+  #
+  # 2. For-expression filtering: [for item in list : item if condition]
+  #    - Iterates through all publishers
+  #    - Returns only those matching the name
+  #    - [0] gets the first (and should be only) match
+  #
+  # Result: A single publisher object with .publisher_id and .publisher_name
+  #
   publisher = var.publisher_name != null ? (
     [for p in data.netskope_npa_publishers_list.all.data.publishers : p if p.publisher_name == var.publisher_name][0]
   ) : data.netskope_npa_publishers_list.all.data.publishers[0]

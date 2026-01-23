@@ -1,6 +1,6 @@
 # Contributing to Netskope Terraform Examples
 
-Thank you for your interest in contributing! This repository welcomes contributions including bug fixes, new examples, tutorial improvements, and documentation updates.
+Thank you for your interest in contributing! This repository welcomes contributions including bug fixes, new examples, and documentation updates.
 
 ## How to Contribute
 
@@ -24,13 +24,13 @@ Thank you for your interest in contributing! This repository welcomes contributi
 All Terraform code must pass formatting checks:
 
 ```bash
-terraform fmt -check -recursive code/
+terraform fmt -check -recursive examples/
 ```
 
 Format your code before committing:
 
 ```bash
-terraform fmt -recursive code/
+terraform fmt -recursive examples/
 ```
 
 ### Validation
@@ -38,7 +38,7 @@ terraform fmt -recursive code/
 Ensure your code is syntactically valid:
 
 ```bash
-cd code/your-example
+cd examples/your-example
 terraform init
 terraform validate
 ```
@@ -51,9 +51,10 @@ terraform validate
 
 ### Documentation
 
-- Every example in `code/` must have a `README.md`
+- Every example in `examples/` must have a `README.md`
 - Include: what it creates, prerequisites, usage instructions, cleanup
 - For complex examples, add a `terraform.tfvars.example` file
+- Reference patterns from `getting-started/terraform-basics.md` where appropriate
 
 ## Testing
 
@@ -68,19 +69,12 @@ Contributors should test their changes against a Netskope tenant before submitti
 
 ## Adding New Examples
 
-1. Create a directory under `code/` with a descriptive name
+1. Create a directory under `examples/` with a descriptive name
 2. Add `README.md` with deployment instructions
 3. Add `main.tf` (simple examples) or split files (complex examples)
 4. Add `terraform.tfvars.example` if variables are required
-5. Update `code/README.md` to include your example in the table
+5. Update `examples/README.md` to include your example in the table
 6. Update the root `README.md` if appropriate
-
-## Adding New Tutorials
-
-1. Create `tutorials/your-topic.md`
-2. Create corresponding `code/your-topic/` directory
-3. Link the tutorial to the code directory
-4. Update the root `README.md` tutorials table
 
 ## License
 

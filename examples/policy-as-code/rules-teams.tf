@@ -19,7 +19,9 @@ resource "netskope_npa_rules" "developer_web_access" {
       action_name = "allow"
     }
 
-    # IMPORTANT: Do NOT use brackets around app names - causes "Private app [[name]] doesn't exist" error
+    # private_apps expects a list of app name strings: ["app-one", "app-two"]
+    # local.web_apps is already this format (see data.tf for how it's built)
+    # Do NOT wrap names in extra brackets - ["[app-one]"] causes API errors
     private_apps = [for name in local.web_apps : name]
 
     user_groups = var.developer_groups
@@ -51,7 +53,7 @@ resource "netskope_npa_rules" "dba_readonly_access" {
       action_name = "allow"
     }
 
-    # IMPORTANT: Do NOT use brackets around app names
+    # See data.tf for how local.database_apps is built from tags
     private_apps = [for name in local.database_apps : name]
 
     user_groups = var.dba_groups

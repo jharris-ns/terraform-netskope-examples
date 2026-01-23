@@ -6,7 +6,19 @@
 # Note: real_host must be a single IP or FQDN (CIDR ranges not supported)
 
 locals {
-  # Map app_type to protocol settings
+  # ---------------------------------------------------------------------------
+  # Protocol Lookup Map
+  # ---------------------------------------------------------------------------
+  # Pattern: Use a map for value translation
+  #
+  # Maps let you translate user-friendly values to API-required values.
+  # Used with lookup(): lookup(map, key, default)
+  #
+  # Example: lookup(local.infra_protocols, "ssh", "tcp") returns "ssh"
+  # Example: lookup(local.infra_protocols, "unknown", "tcp") returns "tcp" (default)
+  #
+  # This makes variable input cleaner - users specify "ssh" and we handle the rest
+  #
   infra_protocols = {
     ssh = "ssh"
     rdp = "rdp"

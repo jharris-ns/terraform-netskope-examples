@@ -40,15 +40,17 @@ terraform destroy
 
 ## Examples
 
-| Example | Tutorial | Description |
-|---------|----------|-------------|
-| [browser-app/](./browser-app/) | - | Simple browser-accessible private app |
-| [client-app/](./client-app/) | - | SSH, RDP, and database access via NPA client |
-| [policy-as-code/](./policy-as-code/) | [Tutorial](../tutorials/policy-as-code.md) | NPA access policies with deny rules and team-based access |
-| [private-app-inventory/](./private-app-inventory/) | [Tutorial](../tutorials/private-app-inventory.md) | Manage multiple apps at scale with variables |
-| [publisher-aws/](./publisher-aws/) | [Tutorial](../tutorials/publisher-aws.md) | Deploy NPA publisher in AWS with VPC |
-| [publisher-management/](./publisher-management/) | - | Publisher lifecycle, upgrades, and alerts |
-| [full-deployment/](./full-deployment/) | - | Complete NPA setup with publishers, apps, and policies |
+Users with limited Terraform experience should first review [Patterns Used in Our Examples](../getting-started/terraform-basics.md#patterns-used-in-our-examples) for explanations of the patterns used throughout these examples.
+
+| Example | Difficulty | Description |
+|---------|------------|-------------|
+| [browser-app/](./browser-app/) | Simple | Browser-accessible private app |
+| [client-app/](./client-app/) | Simple | SSH, RDP, and database access via NPA client |
+| [publisher-management/](./publisher-management/) | Simple | Publisher lifecycle, upgrades, and alerts |
+| [private-app-inventory/](./private-app-inventory/) | Intermediate | Manage multiple apps at scale with variables |
+| [publisher-aws/](./publisher-aws/) | Intermediate | Deploy NPA publisher in AWS with VPC |
+| [policy-as-code/](./policy-as-code/) | Intermediate | NPA access policies with deny rules and team-based access |
+| [full-deployment/](./full-deployment/) | Advanced | Complete NPA setup with publishers, apps, and policies |
 
 ## Example Categories
 

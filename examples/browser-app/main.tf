@@ -21,6 +21,8 @@
 # 3. This example requires at least one publisher to exist in your tenant
 #    Run publisher-management example first if you don't have publishers
 #
+# See: https://docs.netskope.com/en/configure-browser-access-for-private-apps/
+#
 # =============================================================================
 
 terraform {

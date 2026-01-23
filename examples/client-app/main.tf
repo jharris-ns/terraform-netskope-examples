@@ -13,6 +13,7 @@
 # 1. clientless_access MUST be set to true for non-HTTP protocols (SSH, RDP, TCP)
 #    Despite the name, this is REQUIRED for these protocols to work.
 #    If false, you'll get: "Clientless_access need to be set for non-web browser access"
+#    See: https://docs.netskope.com/en/configure-browser-access-for-private-apps/
 #
 # 2. real_host should be a FQDN for consistency, though IPs may work for non-HTTPS
 #    Best practice: Always use FQDNs like "server.internal.local"

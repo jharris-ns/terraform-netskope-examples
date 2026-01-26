@@ -61,9 +61,10 @@ resource "netskope_npa_publisher_upgrade_profile" "production_weekly" {
   enabled  = true
   timezone = "US/Pacific"
 
-  # Upgrade on Sundays at 2 AM
+  # Frequency uses standard cron format: minute hour day-of-month month day-of-week
+  # Schedule: Sundays at 2 AM Pacific
   docker_tag   = data.netskope_npa_publishers_releases_list.releases.data[1].docker_tag # Latest stable
-  frequency    = "weekly"
+  frequency    = "0 2 * * 0" # minute=0, hour=2, any day, any month, Sunday
   release_type = "Latest"
 }
 
@@ -73,9 +74,10 @@ resource "netskope_npa_publisher_upgrade_profile" "staging_daily" {
   enabled  = true
   timezone = "US/Pacific"
 
-  # Use beta releases for testing
+  # Frequency uses standard cron format: minute hour day-of-month month day-of-week
+  # Schedule: Daily at midnight Pacific
   docker_tag   = data.netskope_npa_publishers_releases_list.releases.data[0].docker_tag # Beta
-  frequency    = "daily"
+  frequency    = "0 0 * * *" # Daily at midnight
   release_type = "Beta"
 }
 
@@ -125,6 +127,11 @@ resource "netskope_npa_publisher_token" "eu_west_1" {
 
 # Configure alerts for publisher events
 # NOTE: Requires valid admin email addresses that exist in your Netskope tenant
+#
+# WARNING: The valid event_types for alerts are not fully documented in the API.
+# Values like "publisher_up" and "publisher_down" may be rejected.
+# The event types shown below are examples - test in non-production first.
+#
 # Uncomment and configure with your actual admin emails:
 #
 # resource "netskope_npa_publishers_alerts_configuration" "alerts" {

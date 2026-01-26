@@ -38,37 +38,39 @@ resource "netskope_npa_rules" "general_browser_access" {
 }
 
 # Catch-all deny rule (optional - for explicit deny-by-default)
-# Only created if there are apps to protect
-resource "netskope_npa_rules" "deny_all_other" {
-  count = length(local.all_app_names) > 0 ? 1 : 0
-
-  rule_name   = "${var.environment}-deny-all-other"
-  description = "Deny all access not explicitly allowed above"
-  enabled     = "1"
-
-  rule_data = {
-    policy_type  = "private-app"
-    json_version = 3
-
-    match_criteria_action = {
-      action_name = "block"
-    }
-
-    # All apps
-    # IMPORTANT: Do NOT use brackets around app names
-    private_apps = [for name in local.all_app_names : name]
-
-    user_type = "user"
-
-    access_method = ["Client", "Clientless"]
-  }
-
-  rule_order = {
-    order = "bottom"
-  }
-
-  # Ensure this is truly last
-  depends_on = [
-    netskope_npa_rules.general_browser_access
-  ]
-}
+# NOTE: Block/deny rules require profile configuration (DLP Profile or Threat Protection Profile)
+# and may not be supported in all tenants. Uncomment and configure if your tenant supports it.
+#
+# resource "netskope_npa_rules" "deny_all_other" {
+#   count = length(local.all_app_names) > 0 ? 1 : 0
+#
+#   rule_name   = "${var.environment}-deny-all-other"
+#   description = "Deny all access not explicitly allowed above"
+#   enabled     = "1"
+#
+#   rule_data = {
+#     policy_type  = "private-app"
+#     json_version = 3
+#
+#     match_criteria_action = {
+#       action_name = "block"
+#     }
+#
+#     # All apps
+#     # IMPORTANT: Do NOT use brackets around app names
+#     private_apps = [for name in local.all_app_names : name]
+#
+#     user_type = "user"
+#
+#     access_method = ["Client", "Clientless"]
+#   }
+#
+#   rule_order = {
+#     order = "bottom"
+#   }
+#
+#   # Ensure this is truly last
+#   depends_on = [
+#     netskope_npa_rules.general_browser_access
+#   ]
+# }

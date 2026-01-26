@@ -15,6 +15,9 @@ resource "netskope_npa_private_app" "database" {
   is_user_portal_app = false
   use_publisher_dns  = true
 
+  # Note: If adding multiple protocols to any app, list them in ascending port
+  # order to avoid Terraform drift. The API may return protocols in a different
+  # order, causing plan changes if not sorted.
   protocols = [
     {
       port     = each.value.port

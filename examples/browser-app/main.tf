@@ -21,6 +21,10 @@
 # 3. This example requires at least one publisher to exist in your tenant
 #    Run publisher-management example first if you don't have publishers
 #
+# 4. Browser/clientless apps do not support multiple ports or port ranges
+#    Only a single TCP port can be specified per browser-accessible app.
+#    Error: "Clientless private app doesn't support port range and multiple port"
+#
 # See: https://docs.netskope.com/en/configure-browser-access-for-private-apps/
 #
 # =============================================================================
@@ -96,6 +100,9 @@ resource "netskope_npa_private_app" "internal_wiki" {
   is_user_portal_app = true
 
   # Protocol configuration for HTTPS
+  # Note: If adding multiple protocols, list them in ascending port order
+  # to avoid Terraform drift (e.g., 80, 443). The API may return protocols
+  # in a different order, causing plan changes if not sorted.
   protocols = [
     {
       port     = "443"

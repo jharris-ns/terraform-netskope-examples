@@ -21,6 +21,12 @@
 # 3. This example requires at least one publisher to exist in your tenant
 #    Run publisher-management example first if you don't have publishers
 #
+# 4. Protocol Ordering (Issue #14 - causes Terraform plan drift)
+#    If defining multiple protocols for an app, list them in this exact order:
+#    - TCP protocols first, sorted by port ascending (22, 80, 443)
+#    - UDP protocols second, sorted by port ascending (53, 123)
+#    The API returns protocols in sorted order; mismatched ordering causes drift.
+#
 # =============================================================================
 
 terraform {
@@ -83,6 +89,9 @@ resource "netskope_npa_private_app" "ssh_bastion" {
   is_user_portal_app = false
 
   # SSH protocol on port 22
+  # Note: If adding multiple protocols, list them in ascending port order
+  # to avoid Terraform drift (e.g., 22, 80, 443). The API may return protocols
+  # in a different order, causing plan changes if not sorted.
   protocols = [
     {
       port     = "22"
@@ -112,6 +121,8 @@ resource "netskope_npa_private_app" "rdp_server" {
   is_user_portal_app = false
 
   # RDP protocol on port 3389
+  # Note: If adding multiple protocols, list them in ascending port order
+  # to avoid Terraform drift (e.g., 22, 3389).
   protocols = [
     {
       port     = "3389"
@@ -141,6 +152,8 @@ resource "netskope_npa_private_app" "database_cluster" {
   is_user_portal_app = false
 
   # PostgreSQL default port
+  # Note: If adding multiple protocols, list them in ascending port order
+  # to avoid Terraform drift.
   protocols = [
     {
       port     = "5432"

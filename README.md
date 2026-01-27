@@ -42,6 +42,7 @@ Users with limited Terraform experience should first review [Patterns Used in Ou
 | New to Terraform | [Terraform Basics](./getting-started/terraform-basics.md) |
 | Deploy your first private app | [Quick Start](./getting-started/quick-start.md) |
 | Project structure and naming | [Best Practices](./guides/best-practices.md) |
+| Upgrading from 0.3.2 | [Upgrade Guide](./guides/upgrading-to-0.3.4.md) |
 
 ## Quick Start
 

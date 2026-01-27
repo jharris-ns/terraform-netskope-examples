@@ -30,9 +30,12 @@
 # =============================================================================
 
 terraform {
+  required_version = ">= 1.0"
+
   required_providers {
     netskope = {
-      source = "netskopeoss/netskope"
+      source  = "netskopeoss/netskope"
+      version = ">= 0.3.4"
     }
   }
 }

@@ -47,6 +47,7 @@ Users with limited Terraform experience should first review [Patterns Used in Ou
 | [browser-app/](./browser-app/) | Simple | Browser-accessible private app |
 | [client-app/](./client-app/) | Simple | SSH, RDP, and database access via NPA client |
 | [publisher-management/](./publisher-management/) | Simple | Publisher lifecycle, upgrades, and alerts |
+| [local-broker-management/](./local-broker-management/) | Simple | Local broker configuration and tokens |
 | [private-app-inventory/](./private-app-inventory/) | Intermediate | Manage multiple apps at scale with variables |
 | [publisher-aws/](./publisher-aws/) | Intermediate | Deploy NPA publisher in AWS with VPC |
 | [policy-as-code/](./policy-as-code/) | Intermediate | NPA access policies with deny rules and team-based access |
@@ -64,10 +65,11 @@ Managing multiple applications:
 - **private-app-inventory** - Organize apps by tier (web, database, infrastructure)
 - **full-deployment** - Complete setup including publishers and policies
 
-### Publisher Deployment
-Deploying NPA publishers:
+### Publisher & Local Broker Deployment
+Deploying NPA publishers and local brokers:
 - **publisher-aws** - Deploy in AWS with proper network isolation
 - **publisher-management** - Manage publisher fleet, upgrades, alerts
+- **local-broker-management** - Manage local brokers, hostname config, tokens
 
 ### Access Control
 Policy and rule management:

@@ -15,6 +15,7 @@ credentials.json
 # IDE
 .idea/
 .vscode/
+.claude/
 *.swp
 *.swo
 

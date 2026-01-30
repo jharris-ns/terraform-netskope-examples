@@ -10,16 +10,30 @@
 # IMPORTANT NOTES:
 # =============================================================================
 #
-# 1. clientless_access MUST be set to true for non-HTTP protocols (SSH, RDP, TCP)
-#    Despite the name, this is REQUIRED for these protocols to work.
-#    If false, you'll get: "Clientless_access need to be set for non-web browser access"
-#    See: https://docs.netskope.com/en/configure-browser-access-for-private-apps/
+# 1. Client-based vs browser-based apps use MUTUALLY EXCLUSIVE fields:
 #
-# 2. real_host should be a FQDN for consistency, though IPs may work for non-HTTPS
-#    Best practice: Always use FQDNs like "server.internal.local"
+#    Client-based (this example):
+#      - private_app_hostname = user-specified hosts/IPs (supports wildcards, CIDR)
+#      - protocols            = required (array of tcp/udp + port pairs)
+#      - clientless_access    = false (or omit)
+#      - Do NOT set: real_host, private_app_protocol (these are browser-only)
 #
-# 3. This example requires at least one publisher to exist in your tenant
-#    Run publisher-management example first if you don't have publishers
+#    Browser-based (see browser-app example):
+#      - real_host             = required (actual backend FQDN, no IPs)
+#      - private_app_protocol  = required (http or https)
+#      - clientless_access     = true
+#      - private_app_hostname is auto-generated (do not set)
+#
+#    If you need both access methods for the same resource, create two
+#    separate app definitions.
+#
+# 2. Setting clientless_access=true on a client app will turn it into a
+#    browser-proxied app, changing the hostname to an npaproxy URL.
+#    Setting private_app_protocol with clientless_access=false causes:
+#    "Clientless_access need to be set for non-web browser access"
+#
+# 3. This example requires at least one publisher to exist in your tenant.
+#    Run publisher-management example first if you don't have publishers.
 #
 # 4. Protocol Ordering (Issue #14 - causes Terraform plan drift)
 #    If defining multiple protocols for an app, list them in this exact order:
@@ -83,12 +97,9 @@ locals {
 resource "netskope_npa_private_app" "ssh_bastion" {
   private_app_name     = "SSH Bastion Host"
   private_app_hostname = "bastion.internal.company.com"
-  private_app_protocol = "ssh"
-  real_host            = "bastion.internal.local"
 
-  # IMPORTANT: clientless_access MUST be true for non-HTTP protocols
-  # Without this, you'll get: "Clientless_access need to be set for non-web browser access"
-  clientless_access  = true
+  # Client-based apps: clientless_access must be false (default)
+  clientless_access  = false
   is_user_portal_app = false
 
   # SSH protocol on port 22
@@ -116,11 +127,9 @@ resource "netskope_npa_private_app" "ssh_bastion" {
 resource "netskope_npa_private_app" "rdp_server" {
   private_app_name     = "Windows Admin Server"
   private_app_hostname = "admin-win.internal.company.com"
-  private_app_protocol = "rdp"
-  real_host            = "admin-win.internal.local"
 
-  # IMPORTANT: clientless_access MUST be true for RDP
-  clientless_access  = true
+  # Client-based apps: clientless_access must be false (default)
+  clientless_access  = false
   is_user_portal_app = false
 
   # RDP protocol on port 3389
@@ -147,11 +156,9 @@ resource "netskope_npa_private_app" "rdp_server" {
 resource "netskope_npa_private_app" "database_cluster" {
   private_app_name     = "PostgreSQL Database"
   private_app_hostname = "postgres.internal.company.com"
-  private_app_protocol = "tcp"
-  real_host            = "postgres.internal.local"
 
-  # IMPORTANT: clientless_access MUST be true for TCP protocol apps
-  clientless_access  = true
+  # Client-based apps: clientless_access must be false (default)
+  clientless_access  = false
   is_user_portal_app = false
 
   # PostgreSQL default port

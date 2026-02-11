@@ -11,6 +11,7 @@ terraform.tfvars
 credentials.json
 *.pem
 *.key
+.env
 
 # IDE
 .idea/

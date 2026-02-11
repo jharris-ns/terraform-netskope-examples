@@ -24,3 +24,6 @@ override.tf.json
 
 # Plan files
 *.tfplan
+
+# Environment files
+.env

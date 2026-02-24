@@ -10,6 +10,12 @@ Creates private applications that require the Netskope NPA client for access. Id
 
 All apps require the NPA client - no browser access.
 
+## Browser-Only Fields (Do Not Use Here)
+
+The following fields only apply to browser-based apps (`clientless_access = true`) and should **not** be set on client-based apps: `custom_host`, `hide_app_in_portal`, `upgrade_insecure_requests`, `allow_uri_bypass`, `bypass_uris`, `uribypass_header_value`, `allow_unauthenticated_cors`.
+
+See the [browser-app](../browser-app/) example for usage of these fields.
+
 ## Prerequisites
 
 - At least one registered NPA publisher
@@ -25,7 +31,6 @@ All apps require the NPA client - no browser access.
 
 2. Update `main.tf` with your server details:
    - `private_app_hostname` - The hostname users will connect to
-   - `real_host` - The actual IP of the backend server
    - `protocols.port` - The port for each service
 
 3. Deploy:

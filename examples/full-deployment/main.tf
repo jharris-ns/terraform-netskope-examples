@@ -98,9 +98,12 @@ resource "netskope_npa_private_app" "web_app" {
     }
   ]
 
+  # Tag names are case-sensitive. If a tag already exists in the tenant,
+  # use the exact casing shown in the Netskope admin console. The API
+  # performs a case-insensitive lookup but returns the canonical casing,
+  # which will cause plan drift if the casing here doesn't match.
   tags = [
-    { tag_name = var.environment },
-    { tag_name = "web" }
+    { tag_name = "${var.environment}-web" },
   ]
 
   use_publisher_dns       = true
@@ -135,9 +138,9 @@ resource "netskope_npa_private_app" "ssh_servers" {
     }
   ]
 
+  # Tag names are case-sensitive (see note on web_app above)
   tags = [
-    { tag_name = var.environment },
-    { tag_name = "infrastructure" }
+    { tag_name = "${var.environment}-infra" },
   ]
 
   use_publisher_dns = true

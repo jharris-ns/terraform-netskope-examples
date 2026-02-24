@@ -27,15 +27,27 @@
 #    If you need both access methods for the same resource, create two
 #    separate app definitions.
 #
-# 2. Setting clientless_access=true on a client app will turn it into a
+# 2. The following fields are BROWSER-ONLY (clientless_access = true).
+#    Do NOT set these on client-based apps:
+#      - custom_host               (read-only, derived from cert CN uploaded via UI)
+#      - hide_app_in_portal        (visibility in Browser Access User Portal)
+#      - enterprise_browser        (enables Enterprise Browser features)
+#      - upgrade_insecure_requests (upgrade HTTP to HTTPS, requires enterprise_browser)
+#      - allow_uri_bypass          (skip SAML auth for specific URIs)
+#      - bypass_uris               (list of URI paths to bypass auth)
+#      - uribypass_header_value    (shared secret for X-NSKP-URIBYPASS header)
+#      - allow_unauthenticated_cors (allow CORS OPTIONS without auth)
+#    See the browser-app example for usage of these fields.
+#
+# 3. Setting clientless_access=true on a client app will turn it into a
 #    browser-proxied app, changing the hostname to an npaproxy URL.
 #    Setting private_app_protocol with clientless_access=false causes:
 #    "Clientless_access need to be set for non-web browser access"
 #
-# 3. This example requires at least one publisher to exist in your tenant.
+# 4. This example requires at least one publisher to exist in your tenant.
 #    Run publisher-management example first if you don't have publishers.
 #
-# 4. Protocol Ordering (Issue #14 - causes Terraform plan drift)
+# 5. Protocol Ordering (Issue #14 - causes Terraform plan drift)
 #    If defining multiple protocols for an app, list them in this exact order:
 #    - TCP protocols first, sorted by port ascending (22, 80, 443)
 #    - UDP protocols second, sorted by port ascending (53, 123)

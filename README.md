@@ -2,38 +2,44 @@
 
 Learn how to use the [Netskope Terraform Provider](https://registry.terraform.io/providers/netskopeoss/netskope/latest) through working examples.
 
-**Why manage NPA with Terraform?**
-- Version control your private app and policy configurations
-- Automate publisher deployments across cloud environments
+**Why manage Netskope with Terraform?**
+- Version control your security configurations
+- Automate deployments across cloud environments
 - Reduce manual configuration and human error
 
 ## Examples
 
-All examples are in the [`examples/`](./examples/) directory with deployment instructions.
+All examples are in the [`examples/`](./examples/) directory, organized by product area.
 
 Users with limited Terraform experience should first review [Patterns Used in Our Examples](./getting-started/terraform-basics.md#patterns-used-in-our-examples) for explanations of the patterns used throughout these examples.
 
-### Simple
+### NPA (Netskope Private Access)
 
-| Example | Description |
-|---------|-------------|
-| [browser-app](./examples/browser-app/) | Browser-accessible private application |
-| [client-app](./examples/client-app/) | SSH, RDP, and database access via NPA client |
-| [publisher-management](./examples/publisher-management/) | Publisher lifecycle and upgrades |
+| Example | Difficulty | Description |
+|---------|------------|-------------|
+| [browser-app](./examples/npa/browser-app/) | Simple | Browser-accessible private application |
+| [client-app](./examples/npa/client-app/) | Simple | SSH, RDP, and database access via NPA client |
+| [publisher-management](./examples/npa/publisher-management/) | Simple | Publisher lifecycle and upgrades |
+| [local-broker-management](./examples/npa/local-broker-management/) | Simple | Local broker configuration and tokens |
+| [private-app-inventory](./examples/npa/private-app-inventory/) | Intermediate | Manage multiple apps at scale with variables |
+| [publisher-aws](./examples/npa/publisher-aws/) | Intermediate | Deploy NPA publisher in AWS with VPC and NAT |
+| [policy-as-code](./examples/npa/policy-as-code/) | Intermediate | Access policies with deny rules and ordering |
+| [full-deployment](./examples/npa/full-deployment/) | Advanced | End-to-end NPA setup: publishers, apps, and policies |
 
-### Intermediate
+### DNS Security
 
-| Example | Description |
-|---------|-------------|
-| [private-app-inventory](./examples/private-app-inventory/) | Manage multiple apps at scale with variables |
-| [publisher-aws](./examples/publisher-aws/) | Deploy NPA publisher in AWS with VPC and NAT |
-| [policy-as-code](./examples/policy-as-code/) | Access policies with deny rules and ordering |
+| Example | Difficulty | Description |
+|---------|------------|-------------|
+| [basic-profile](./examples/dnsprofiles/basic-profile/) | Simple | DNS profile with domain allow and block lists |
+| [security-categories](./examples/dnsprofiles/security-categories/) | Intermediate | Category-based blocking and sinkholing |
+| [full-deployment](./examples/dnsprofiles/full-deployment/) | Advanced | Complete DNS setup with tunneling, custom DNS, inheritance |
 
-### Advanced
+### IPSec
 
-| Example | Description |
-|---------|-------------|
-| [full-deployment](./examples/full-deployment/) | End-to-end NPA setup: publishers, apps, and policies |
+| Example | Difficulty | Description |
+|---------|------------|-------------|
+| [vpn](./examples/ipsec/vpn/) | Intermediate | IPSec tunnel steering configuration |
+| [aws-transitgateway-vpn](./examples/ipsec/aws-transitgateway-vpn/) | Advanced | AWS Transit Gateway + Netskope IPSec integration |
 
 ## Where to Start
 
@@ -48,7 +54,7 @@ Users with limited Terraform experience should first review [Patterns Used in Ou
 
 ```bash
 git clone https://github.com/netskopeoss/terraform-netskope-examples.git
-cd terraform-netskope-examples/examples/browser-app
+cd terraform-netskope-examples/examples/npa/browser-app
 
 export NETSKOPE_SERVER_URL="https://your-tenant.goskope.com/api/v2"
 export NETSKOPE_API_KEY="your-api-token"
@@ -62,6 +68,7 @@ For detailed setup instructions, see the [Quick Start guide](./getting-started/q
 
 - Netskope tenant with REST API v2 access ([setup guide](./getting-started/quick-start.md#step-1-create-an-api-key))
 - Terraform >= 1.0
+- Product-specific licenses: NPA, DNS Security, or IPSec as needed
 - For AWS examples: AWS CLI configured with appropriate permissions
 
 ## Resources

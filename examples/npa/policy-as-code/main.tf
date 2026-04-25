@@ -17,9 +17,9 @@
 #    Error: "Invalid values from users, userGroups"
 #    Solution: Set group variables to empty [] if not using group-based rules
 #
-# 3. Rule ordering matters - deny rules should be at the top
-#    Use rule_order with "top" for deny rules
-#    Use depends_on to ensure proper ordering between rules
+# 3. NPA rules use most-specific-match evaluation, not top-to-bottom
+#    Rule position in the list is organizational only
+#    Use rule_order to control list placement for readability
 #
 # =============================================================================
 

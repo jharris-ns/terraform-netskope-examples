@@ -68,6 +68,19 @@ device_classification_id = [
 ]
 ```
 
+### All Classifications ("Managed" Equivalent)
+
+The Netskope UI shows "Managed" and "Unmanaged" as device categories, but these are convenience groupings — not distinct API entities. To replicate "Managed" in Terraform, include all device classification tag IDs:
+
+```hcl
+device_classification_id = [
+  for t in data.netskope_device_classification_tag_list.all.tags :
+  tostring(t.tag_id)
+]
+```
+
+A device matching ANY tag is considered "managed".
+
 ### Validate Tag Exists
 
 ```hcl

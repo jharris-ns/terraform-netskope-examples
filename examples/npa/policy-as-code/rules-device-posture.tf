@@ -36,7 +36,7 @@ resource "netskope_npa_rules" "require_endpoint_protection" {
     ]
   }
 
-  # Place this BEFORE the general DBA rule so posture-checked access is preferred
+  # Place this before the general DBA rule for organizational clarity
   rule_order = {
     order = "before"
     rule_id = length(netskope_npa_rules.dba_readonly_access) > 0 ? (

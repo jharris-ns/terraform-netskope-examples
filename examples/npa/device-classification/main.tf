@@ -165,6 +165,41 @@ resource "netskope_npa_rules" "posture_required" {
 }
 
 # =============================================================================
+# NPA RULE WITH ALL DEVICE CLASSIFICATIONS ("MANAGED" EQUIVALENT)
+# =============================================================================
+
+# The Netskope UI shows "Managed" as a convenience grouping, but it is not a
+# distinct API entity. To replicate "Managed" in Terraform, list ALL device
+# classification tag IDs. A device matching ANY tag is considered "managed".
+resource "netskope_npa_rules" "managed_devices" {
+  rule_name   = "require-managed-device"
+  description = "Allow access only from devices matching any classification tag"
+  enabled     = "1"
+  group_id    = local.default_group.id
+
+  rule_data = {
+    policy_type = "private-app"
+
+    match_criteria_action = {
+      action_name = "allow"
+    }
+
+    private_apps  = [netskope_npa_private_app.secure_app.private_app_name]
+    access_method = ["Client"]
+
+    # All device classification tags = "Managed" equivalent
+    device_classification_id = [
+      for t in data.netskope_device_classification_tag_list.all.tags :
+      tostring(t.tag_id)
+    ]
+  }
+
+  rule_order = {
+    order = "bottom"
+  }
+}
+
+# =============================================================================
 # OUTPUTS
 # =============================================================================
 

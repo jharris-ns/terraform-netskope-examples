@@ -43,19 +43,36 @@ terraform init && terraform plan && terraform apply
 +-------------------------------------------------+
 ```
 
-Rules are evaluated top-to-bottom. First matching rule wins.
+NPA rules use **most-specific-match** evaluation — the rule whose criteria most precisely match the request is applied, regardless of list position. The `rule_order` attribute controls list placement for organizational purposes only.
 
-## Rule Evaluation Order
+## Rule List Organization
 
 ```
-1. Deny blocked users     <- First (always deny terminated/quarantined)
-2. Admin SSH access       <- Privileged access
+1. Deny blocked users     <- Broad deny (terminated/quarantined)
+2. Admin SSH access       <- Privileged access (specific users + apps)
 3. Admin database access
 4. Developer web access   <- Team-based access
 5. DBA database access
 6. General browser access <- Broad access
-7. Deny all other         <- Last (catch-all deny)
+7. Deny all other         <- Catch-all deny
 ```
+
+## Best Practice: Use a Dedicated Policy Group
+
+NPA rules should be organized within their own policy group rather than placed in the Default group. This keeps Terraform-managed rules isolated from manually-created rules and makes it easier to manage rule lifecycle.
+
+```hcl
+resource "netskope_npa_policy_groups" "terraform" {
+  group_name = "Terraform-Managed"
+
+  group_order = {
+    group_id = "2"
+    order    = "after"
+  }
+}
+```
+
+Then reference `netskope_npa_policy_groups.terraform.id` as the `group_id` for all rules in this group.
 
 ## Prerequisites
 
@@ -137,8 +154,7 @@ resource "netskope_npa_rules" "rule_2" {
 |---------|--------------|-----|
 | `enabled = true` | Type error | Use string: `enabled = "1"` |
 | `enabled = 1` | Type error | Use string: `enabled = "1"` |
-| Missing `depends_on` | Rules created in wrong order | Add `depends_on` chain |
-| Deny rule at bottom | Deny never matches | Use `rule_order = { order = "top" }` |
+| Missing `depends_on` | Rules created in unpredictable order | Add `depends_on` chain |
 | Brackets around app names | "Private app [[name]] doesn't exist" | Use plain strings in list |
 
 ## Modifying Rules

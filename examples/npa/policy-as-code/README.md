@@ -148,6 +148,51 @@ resource "netskope_npa_rules" "rule_2" {
 }
 ```
 
+### Bulk Ordering with netskope_npa_rules_order
+
+For larger deployments where you manage many rules with `for_each`, the `netskope_npa_rules_order` resource lets you control the list position of all rules in a single place:
+
+```hcl
+locals {
+  policies = yamldecode(file("policies.yaml"))
+  policy_map = { for p in local.policies : p.name => p }
+}
+
+# Step 1: Create all rules at bottom (parallel, fast)
+resource "netskope_npa_rules" "bulk" {
+  for_each = local.policy_map
+
+  rule_name = each.value.name
+  enabled   = "1"
+  group_id  = netskope_npa_policy_groups.terraform.id
+
+  rule_data = {
+    policy_type           = "private-app"
+    match_criteria_action = { action_name = each.value.action }
+    private_apps          = each.value.apps
+    user_groups           = each.value.groups
+    access_method         = ["Client"]
+  }
+
+  rule_order = { order = "bottom" }
+
+  lifecycle {
+    ignore_changes = [rule_order]
+  }
+}
+
+# Step 2: Set list positions (list order = display order in UI)
+resource "netskope_npa_rules_order" "main" {
+  rule_ids = [for p in local.policies : netskope_npa_rules.bulk[p.name].id]
+}
+```
+
+With this pattern:
+
+- **Adding a rule**: add a line to the YAML at the desired position. Only the new rule is created; existing rules are untouched.
+- **Removing a rule**: remove the line. The rule is destroyed and the order resource updates.
+- **Reordering**: move lines in the YAML. Only the order resource updates — no rules are re-created.
+
 ## Common Mistakes
 
 | Mistake | What Happens | Fix |

@@ -1,0 +1,67 @@
+# =============================================================================
+# Provider Credentials
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values
+
+# Netskope credentials (from Settings > Tools > REST API v2)
+netskope_api_key    = "your-netskope-api-key"
+netskope_server_url = "https://your-tenant.goskope.com/api/v2"
+
+# =============================================================================
+# Publisher Configuration
+# =============================================================================
+# IMPORTANT: These names must match EXISTING publishers in your Netskope tenant
+# List your publishers: terraform state list or check Netskope UI
+
+environment              = "production"
+primary_publisher_name   = "your-publisher-name" # REQUIRED: Update with your actual publisher name
+secondary_publisher_name = ""                    # Optional, leave empty if not using HA
+
+common_tags = [
+  "managed-by-terraform"
+]
+
+# =============================================================================
+# Web Applications (optional)
+# =============================================================================
+# Note: real_host must be FQDN (not IP) for https apps
+
+web_apps = {
+  # Uncomment and customize:
+  # jira = {
+  #   hostname  = "jira.internal.example.com"
+  #   real_host = "jira-server.internal.local"  # Must be FQDN for https
+  #   port      = "443"
+  #   tags      = ["devtools"]
+  # }
+}
+
+# =============================================================================
+# Database Applications (optional)
+# =============================================================================
+
+database_apps = {
+  # Uncomment and customize:
+  # postgres-main = {
+  #   hostname  = "postgres.internal.example.com"
+  #   real_host = "postgres.internal.local"
+  #   port      = "5432"
+  #   tags      = ["primary-db"]
+  # }
+}
+
+# =============================================================================
+# Infrastructure Applications (optional)
+# =============================================================================
+# Note: SSH/RDP/VNC require clientless_access = true (set in apps-infrastructure.tf)
+
+infra_apps = {
+  # Uncomment and customize:
+  # ssh-jumpbox = {
+  #   hostname  = "jumpbox.internal.example.com"
+  #   real_host = "jumpbox.internal.local"
+  #   port      = "22"
+  #   app_type  = "ssh"
+  #   tags      = ["admin-access"]
+  # }
+}

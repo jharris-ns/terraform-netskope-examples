@@ -1,0 +1,10 @@
+# Copy this file to terraform.tfvars and update with your values:
+#   cp terraform.tfvars.example terraform.tfvars
+
+profile_name = "Production DNS Security"
+sinkhole_ip  = "198.51.100.1"
+
+custom_dns_servers = ["10.0.0.53", "10.0.1.53"]
+
+# Set to your inheritance group name, or leave commented out to skip
+# inheritance_group = "My Inheritance Group"

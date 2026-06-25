@@ -1,0 +1,32 @@
+# =============================================================================
+# IPSec POP Management — Example Variable Values
+# =============================================================================
+# Copy this file to terraform.tfvars and update with your values.
+# NEVER commit terraform.tfvars to version control — it contains secrets.
+#
+# Quick start:
+#   cp terraform.tfvars.example terraform.tfvars
+#   # Edit terraform.tfvars with real values
+#   terraform init && terraform plan
+# =============================================================================
+
+# Netskope POP short code to terminate the tunnel at.
+# Run `terraform plan` first to see the accepting_pops output for available codes.
+# Choose a POP geographically close to your network egress point.
+pop_name = "iad2"
+
+# Site name displayed in the Netskope UI under Infrastructure > IPSec Tunnels
+tunnel_name = "My-Office-VPN"
+
+# Public IP of your firewall or router (the device that will initiate the tunnel)
+source_ip = "203.0.113.50"
+
+# IKE identity — uniquely identifies this tunnel endpoint.
+# Each tunnel on the tenant must have a distinct source_identity.
+# Formats: IP address ("203.0.113.50"), FQDN ("vpn.company.com"), or email ("vpn@company.com")
+source_identity = "vpn@company.com"
+
+# Pre-shared key for IKE authentication.
+# Use a strong random value (minimum 16 characters recommended).
+# Must match what you configure on your firewall.
+pre_shared_key = "YourStrongPreSharedKey123!"

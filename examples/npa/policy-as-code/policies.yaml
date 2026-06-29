@@ -1,0 +1,59 @@
+# =============================================================================
+# NPA Policy Rules (ordered top-to-bottom as displayed in the UI)
+# =============================================================================
+# Used with netskope_npa_rules_order to manage rule positions from a single file.
+#
+# To add a rule:    insert a new entry at the desired position
+# To remove a rule: delete the entry (Terraform destroys the rule and updates order)
+# To reorder:       move entries (only the order resource updates, no rules re-created)
+
+- name: production-deny-blocked-users
+  action: block
+  apps:
+    - internal-portal
+    - admin-dashboard
+  groups:
+    - Terminated-Users
+    - Security-Quarantine
+
+- name: production-admin-ssh-access
+  action: allow
+  apps:
+    - ssh-jumpbox
+    - bastion-host
+  groups:
+    - IT-Administrators
+    - SRE-Team
+
+- name: production-admin-database-access
+  action: allow
+  apps:
+    - postgres-primary
+    - redis-cache
+  groups:
+    - IT-Administrators
+    - Database-Admins
+
+- name: production-developer-web-access
+  action: allow
+  apps:
+    - internal-portal
+    - admin-dashboard
+    - ci-cd-dashboard
+  groups:
+    - Engineering
+    - Developers
+
+- name: production-dba-database-access
+  action: allow
+  apps:
+    - postgres-primary
+    - redis-cache
+  groups:
+    - Database-Admins
+
+- name: production-general-browser-access
+  action: allow
+  apps:
+    - internal-portal
+  groups: []

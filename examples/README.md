@@ -42,9 +42,10 @@ terraform destroy
 
 | Topic | Description | Examples |
 |-------|-------------|----------|
-| [npa/](./npa/) | Netskope Private Access — apps, publishers, policies | 10 examples |
+| [npa/](./npa/) | Netskope Private Access — apps, publishers, policies, RBAC | 11 examples |
 | [dnsprofiles/](./dnsprofiles/) | DNS Security — profiles, categories, tunneling detection | 3 examples |
 | [ipsec/](./ipsec/) | IPSec tunnels — traffic steering, AWS Transit Gateway | 2 examples |
+| [web-policy/](./web-policy/) | Real-time Protection — custom categories, service objects | 2 examples |
 
 ### NPA (Netskope Private Access)
 
@@ -59,6 +60,7 @@ terraform destroy
 | [npa/policy-as-code/](./npa/policy-as-code/) | Intermediate | Access policies with deny rules and ordering |
 | [npa/device-classification/](./npa/device-classification/) | Simple | Device posture enforcement via classification tags |
 | [npa/rbac-labels/](./npa/rbac-labels/) | Simple | Label-based access control for NPA resources |
+| [npa/rbac-roles/](./npa/rbac-roles/) | Simple | Admin role definitions with API group permissions |
 | [npa/full-deployment/](./npa/full-deployment/) | Advanced | End-to-end NPA setup: publishers, apps, and policies |
 
 ### DNS Security
@@ -75,6 +77,13 @@ terraform destroy
 |---------|------------|-------------|
 | [ipsec/vpn/](./ipsec/vpn/) | Intermediate | IPSec tunnel steering configuration |
 | [ipsec/aws-transitgateway-vpn/](./ipsec/aws-transitgateway-vpn/) | Advanced | AWS Transit Gateway + Netskope IPSec integration |
+
+### Web Policy (Real-time Protection)
+
+| Example | Difficulty | Description |
+|---------|------------|-------------|
+| [web-policy/custom-categories/](./web-policy/custom-categories/) | Simple | Combine URL lists and destination profiles into policy objects |
+| [web-policy/service-objects/](./web-policy/service-objects/) | Simple | Named port/protocol profiles for firewall rules |
 
 ## Configuration
 

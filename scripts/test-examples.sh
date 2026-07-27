@@ -22,13 +22,19 @@ DNSPROFILES_EXAMPLES=(
   "dnsprofiles/full-deployment"
 )
 
-# All testable examples (default: NPA + DNS)
-EXAMPLES=("${NPA_EXAMPLES[@]}" "${DNSPROFILES_EXAMPLES[@]}")
+WEBPOLICY_EXAMPLES=(
+  "web-policy/custom-categories"
+  "web-policy/service-objects"
+)
+
+# All testable examples (default: NPA + DNS + web policy)
+EXAMPLES=("${NPA_EXAMPLES[@]}" "${DNSPROFILES_EXAMPLES[@]}" "${WEBPOLICY_EXAMPLES[@]}")
 
 # Examples excluded from default testing:
 # NPA:
 # - npa/browser-app (requires is_user_portal_app support, not available on all tenants)
 # - npa/private-app-inventory (requires existing publishers by specific name in tfvars)
+# - npa/rbac-roles (uses placeholder api_group_id values — update before testing)
 #
 # Cloud provider examples excluded:
 # - npa/publisher-aws (requires AWS credentials and marketplace subscription)
@@ -60,7 +66,7 @@ usage() {
   echo "Usage: $0 [-s example] [-v] [-t topic]"
   echo "  -s, --skip      Skip specific example (can be used multiple times)"
   echo "  -v, --validate  Run syntax validation only (no apply/destroy)"
-  echo "  -t, --topic     Run only examples for a topic: npa, dnsprofiles, ipsec"
+  echo "  -t, --topic     Run only examples for a topic: npa, dnsprofiles, web-policy, ipsec"
   echo ""
   echo "Environment variables:"
   echo "  NETSKOPE_SERVER_URL  Netskope API server URL (required for apply/destroy)"
@@ -90,12 +96,16 @@ if [[ -n "$TOPIC_FILTER" ]]; then
       EXAMPLES=("${DNSPROFILES_EXAMPLES[@]}")
       SETUP_EXAMPLE="" # DNS examples don't need publisher setup
       ;;
+    web-policy)
+      EXAMPLES=("${WEBPOLICY_EXAMPLES[@]}")
+      SETUP_EXAMPLE="" # Web policy examples don't need publisher setup
+      ;;
     ipsec)
       echo -e "${YELLOW}IPSec examples require manual configuration and are not auto-tested${NC}"
       exit 0
       ;;
     *)
-      echo "Unknown topic: $TOPIC_FILTER (valid: npa, dnsprofiles, ipsec)"
+      echo "Unknown topic: $TOPIC_FILTER (valid: npa, dnsprofiles, web-policy, ipsec)"
       exit 1
       ;;
   esac

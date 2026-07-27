@@ -42,6 +42,7 @@ Start here if you're new to Netskope Terraform:
 | [policy-as-code/](./policy-as-code/) | Intermediate | NPA access policies with deny rules and team-based access |
 | [device-classification/](./device-classification/) | Simple | Device posture enforcement via classification tags (v0.4.2+) |
 | [rbac-labels/](./rbac-labels/) | Simple | Label-based access control for resource management (v0.4.0+) |
+| [rbac-roles/](./rbac-roles/) | Simple | Admin role definitions with API group permissions (v0.4.8+) |
 
 ## Key Patterns
 

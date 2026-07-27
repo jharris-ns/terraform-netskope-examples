@@ -713,7 +713,50 @@ resource "netskope_npa_rules" "dba_database_access" {
 
   depends_on = [netskope_npa_rules.admin_infra_access]
 }
+```
 
+### Location-based access restriction
+
+`net_location_obj` restricts a rule to users connecting from specific Network Locations. Network
+Locations are IP ranges or subnets defined in the Netskope tenant UI under
+**Policies → Network Locations**. Each location has a numeric ID — you must reference the **ID**,
+not the IP address or subnet.
+
+> **Finding the ID:** In the Netskope UI, open a Network Location and note the numeric ID in the
+> URL (e.g. `.../network-location/27`). There is currently no data source to look these up
+> programmatically — the ID must be copied from the UI.
+
+```hcl
+# Allow developer web access only when connecting from corporate offices
+resource "netskope_npa_rules" "developer_office_only" {
+  rule_name   = "prod-developer-web-office-only"
+  enabled     = "1"
+  description = "Developers may access web apps only from corporate network locations"
+
+  rule_data = {
+    policy_type  = "private-app"
+    json_version = 3
+
+    match_criteria_action = { action_name = "allow" }
+
+    private_apps  = local.web_apps
+    user_groups   = var.developer_groups
+    access_method = ["Client", "Clientless"]
+
+    # Numeric Network Location IDs — find in Netskope UI: Policies > Network Locations
+    # These are NOT IP addresses or CIDR ranges — they are the integer IDs of Location objects.
+    net_location_obj      = ["27", "42"]  # e.g. "HQ Office", "London Office"
+    b_negate_net_location = false         # false = must match; true = must NOT match
+  }
+
+  rule_order = { order = "bottom" }
+}
+```
+
+Use `b_negate_net_location = true` to invert the match — the rule applies when the user is
+**not** in any of the listed locations (useful for deny rules targeting off-network access).
+
+```hcl
 # Catch-all deny (optional — requires block action support on your tenant)
 resource "netskope_npa_rules" "deny_all_other" {
   count = length(local.all_app_names) > 0 ? 1 : 0
@@ -838,6 +881,23 @@ rule_order = {
   rule_id = tonumber(netskope_npa_rules.some_rule[0].id)  # tonumber() required
 }
 ```
+
+**`net_location_obj` takes Network Location IDs, not IP addresses**
+
+The `net_location_obj` field in `rule_data` looks like it should accept IP ranges (the old
+documentation showed examples like `"190.123.150.10"` and `"190.218.0.0/16"`). It does not.
+It takes the **numeric ID** of a Network Location object, as a string:
+
+```hcl
+# WRONG — silently creates a rule that never matches
+net_location_obj = ["190.123.150.10", "10.0.0.0/8"]
+
+# RIGHT — numeric IDs of Network Location objects
+net_location_obj = ["27", "42"]
+```
+
+Find the ID in the Netskope UI under **Policies → Network Locations**. The integer ID appears in
+the page URL. There is no data source to look up IDs programmatically.
 
 **User groups must match IdP values exactly**
 

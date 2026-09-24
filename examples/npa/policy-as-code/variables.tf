@@ -32,6 +32,12 @@ variable "blocked_groups" {
   default     = [] # Empty by default - add your tenant's blocked groups
 }
 
+variable "block_template" {
+  description = "Display name of the NPA block page template (Settings > Security Cloud Platform > NPA > Block Templates). Must be the display name, not the file name."
+  type        = string
+  default     = "Generic Block"
+}
+
 # =============================================================================
 # Application Tags (for rule targeting)
 # =============================================================================

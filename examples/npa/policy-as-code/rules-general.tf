@@ -38,8 +38,9 @@ resource "netskope_npa_rules" "general_browser_access" {
 }
 
 # Catch-all deny rule (optional - for explicit deny-by-default)
-# NOTE: Block/deny rules require profile configuration (DLP Profile or Threat Protection Profile)
-# and may not be supported in all tenants. Uncomment and configure if your tenant supports it.
+# Uncomment to enable a default-deny posture for any access not explicitly allowed above.
+# Requires provider >= 0.4.9 and a block page template configured in the Netskope UI.
+# See rules-deny.tf for a targeted block rule example (blocked users).
 #
 # resource "netskope_npa_rules" "deny_all_other" {
 #   count = length(local.all_app_names) > 0 ? 1 : 0
@@ -47,6 +48,7 @@ resource "netskope_npa_rules" "general_browser_access" {
 #   rule_name   = "${var.environment}-deny-all-other"
 #   description = "Deny all access not explicitly allowed above"
 #   enabled     = "1"
+#   group_id    = local.default_group.id
 #
 #   rule_data = {
 #     policy_type  = "private-app"
@@ -54,9 +56,12 @@ resource "netskope_npa_rules" "general_browser_access" {
 #
 #     match_criteria_action = {
 #       action_name = "block"
+#       emit_alert  = true
+#       # Use the template DISPLAY NAME (e.g. "Generic Block"), NOT the file name (e.g. "23.html")
+#       template = var.block_template
 #     }
 #
-#     # All apps
+#     # All apps — catch-all for any access not matched by an allow rule above
 #     # IMPORTANT: Do NOT use brackets around app names
 #     private_apps = [for name in local.all_app_names : name]
 #

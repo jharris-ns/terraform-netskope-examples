@@ -42,7 +42,7 @@ terraform destroy
 
 | Topic | Description | Examples |
 |-------|-------------|----------|
-| [npa/](./npa/) | Netskope Private Access — apps, publishers, policies, RBAC | 12 examples |
+| [npa/](./npa/) | Netskope Private Access — apps, publishers, policies, RBAC | 13 examples |
 | [dnsprofiles/](./dnsprofiles/) | DNS Security — profiles, categories, tunneling detection | 3 examples |
 | [ipsec/](./ipsec/) | IPSec tunnels — traffic steering, AWS Transit Gateway | 2 examples |
 | [web-policy/](./web-policy/) | Real-time Protection — custom categories, service objects | 2 examples |
@@ -63,6 +63,7 @@ terraform destroy
 | [npa/rbac-labels/](./npa/rbac-labels/) | Simple | Label-based access control for NPA resources |
 | [npa/rbac-roles/](./npa/rbac-roles/) | Simple | Admin role definitions with API group permissions |
 | [npa/full-deployment/](./npa/full-deployment/) | Advanced | End-to-end NPA setup: publishers, apps, and policies |
+| [npa/multi-tenant-deployment/](./npa/multi-tenant-deployment/) | Advanced | Replicate private apps to a chosen subset of Netskope tenants via a shared module and aliased providers |
 
 ### DNS Security
 

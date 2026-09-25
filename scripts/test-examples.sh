@@ -35,6 +35,9 @@ EXAMPLES=("${NPA_EXAMPLES[@]}" "${DNSPROFILES_EXAMPLES[@]}" "${WEBPOLICY_EXAMPLE
 # - npa/browser-app (requires is_user_portal_app support, not available on all tenants)
 # - npa/private-app-inventory (requires existing publishers by specific name in tfvars)
 # - npa/rbac-roles (uses placeholder api_group_id values — update before testing)
+# - npa/multi-tenant-deployment (requires credentials + an existing publisher for
+#   THREE separate Netskope tenants; this single-tenant test harness only sets one
+#   NETSKOPE_SERVER_URL/NETSKOPE_API_KEY pair)
 #
 # Cloud provider examples excluded:
 # - npa/publisher-aws (requires AWS credentials and marketplace subscription)

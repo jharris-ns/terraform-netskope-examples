@@ -25,6 +25,7 @@ Users with limited Terraform experience should first review [Patterns Used in Ou
 | [publisher-aws](./examples/npa/publisher-aws/) | Intermediate | Deploy NPA publisher in AWS with VPC and NAT |
 | [policy-as-code](./examples/npa/policy-as-code/) | Intermediate | Access policies with deny rules and ordering |
 | [full-deployment](./examples/npa/full-deployment/) | Advanced | End-to-end NPA setup: publishers, apps, and policies |
+| [multi-tenant-deployment](./examples/npa/multi-tenant-deployment/) | Advanced | Replicate private apps to a chosen subset of Netskope tenants |
 
 ### DNS Security
 

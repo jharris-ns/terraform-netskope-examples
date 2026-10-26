@@ -1,0 +1,39 @@
+# Copy this file to terraform.tfvars and fill in your tenant-specific values.
+# Never commit terraform.tfvars to source control — it contains tenant IDs.
+
+environment = "prod"
+
+# Required: ID of the NPA policy group to place rules into.
+# Find it in the Netskope UI or with:
+#   data "netskope_npa_policy_groups_list" "all" {}
+#   output "groups" { value = data.netskope_npa_policy_groups_list.all.data }
+policy_group_id = "<your-policy-group-id>"
+
+# Required: display name of the block page template in the Netskope UI.
+#   Settings > Security Cloud Platform > NPA > Block Templates
+# Use the display name, NOT the underlying filename (e.g. "5.html").
+block_template = "Generic Block"
+
+# Optional: user groups to block (terminated / quarantined accounts).
+# Must match exactly the group names from your IdP integration.
+# Leave empty ([]) to skip creating the block-by-user-group rule.
+blocked_user_groups = [
+  # "terminated-employees",
+  # "quarantine",
+]
+
+# Optional: user groups with unrestricted admin access.
+# Leave empty ([]) to skip creating the admin allow rule.
+admin_user_groups = [
+  # "network-admins",
+  # "security-ops",
+]
+
+# Optional: numeric custom device classification tag IDs to include
+# in the "managed devices only" allow rule alongside the built-in "managed" value.
+# Find IDs with:
+#   data "netskope_device_classification_options_list" "all" {}
+extra_managed_classification_ids = [
+  # "16715",
+  # "16758",
+]

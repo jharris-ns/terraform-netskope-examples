@@ -757,7 +757,7 @@ Use `b_negate_net_location = true` to invert the match — the rule applies when
 **not** in any of the listed locations (useful for deny rules targeting off-network access).
 
 ```hcl
-# Catch-all deny (optional — requires block action support on your tenant)
+# Catch-all deny (optional — requires provider >= 0.4.9 and a block page template)
 resource "netskope_npa_rules" "deny_all_other" {
   count = length(local.all_app_names) > 0 ? 1 : 0
 
@@ -769,7 +769,14 @@ resource "netskope_npa_rules" "deny_all_other" {
     policy_type  = "private-app"
     json_version = 3
 
-    match_criteria_action = { action_name = "block" }
+    match_criteria_action = {
+      action_name = "block"
+      emit_alert  = true
+      # Use the template DISPLAY NAME shown in the Netskope UI
+      # (Settings > Security Cloud Platform > NPA > Block Templates)
+      # Do NOT use the file name (e.g. "23.html") — the API returns "Undefined template: 23.html"
+      template = "Generic Block"
+    }
 
     private_apps  = local.all_app_names
     access_method = ["Client", "Clientless"]

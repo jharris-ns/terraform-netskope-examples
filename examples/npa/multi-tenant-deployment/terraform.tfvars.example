@@ -1,0 +1,54 @@
+# Copy to terraform.tfvars and fill in your tenant details.
+# Never commit terraform.tfvars — it is already covered by .gitignore.
+
+tenants = {
+  tenant_a = {
+    server_url     = "https://customer-a.goskope.com/api/v2"
+    publisher_name = "customer-a-publisher-1"
+  }
+  tenant_b = {
+    server_url     = "https://customer-b.goskope.com/api/v2"
+    publisher_name = "customer-b-publisher-1"
+  }
+  tenant_c = {
+    server_url     = "https://customer-c.goskope.com/api/v2"
+    publisher_name = "customer-c-publisher-1"
+  }
+}
+
+# Prefer setting real values via TF_VAR_tenant_api_keys, a CI/CD secret store,
+# or an untracked terraform.tfvars — never commit real API keys.
+tenant_api_keys = {
+  tenant_a = "REPLACE_WITH_TENANT_A_API_KEY"
+  tenant_b = "REPLACE_WITH_TENANT_B_API_KEY"
+  tenant_c = "REPLACE_WITH_TENANT_C_API_KEY"
+}
+
+# App catalog. Each app is deployed only to the tenants listed in `tenants`.
+#
+#                tenant_a   tenant_b   tenant_c
+#   ssh-bastion     x          x
+#   windows-rdp     x                     x
+#   postgres-db                x          x
+#
+# To replicate an app to another tenant, add that tenant's key to its list.
+apps = {
+  ssh-bastion = {
+    hostname = "bastion.internal.company.com"
+    port     = "22"
+    tags     = ["infrastructure"]
+    tenants  = ["tenant_a", "tenant_b"]
+  }
+  windows-rdp = {
+    hostname = "rdp.internal.company.com"
+    port     = "3389"
+    tags     = ["infrastructure"]
+    tenants  = ["tenant_a", "tenant_c"]
+  }
+  postgres-db = {
+    hostname = "postgres.internal.company.com"
+    port     = "5432"
+    tags     = ["database-tier"]
+    tenants  = ["tenant_b", "tenant_c"]
+  }
+}

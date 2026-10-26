@@ -86,13 +86,13 @@ Then reference `netskope_npa_policy_groups.terraform.id` as the `group_id` for a
 | File | Purpose |
 |------|---------|
 | `main.tf` | Provider configuration |
-| `variables.tf` | User groups and app tags |
+| `variables.tf` | User groups, app tags, and block template name |
 | `data.tf` | Discover existing apps and policy groups |
-| `rules-deny.tf` | Deny rules (blocked users) |
+| `rules-deny.tf` | Block rules for terminated/quarantined users (v0.4.9+) |
 | `rules-admin.tf` | Admin/privileged access rules |
 | `rules-teams.tf` | Team-based access rules |
 | `rules-device-posture.tf` | Device posture rules (v0.4.2+) |
-| `rules-general.tf` | General access and catch-all |
+| `rules-general.tf` | General access and optional catch-all deny |
 | `outputs.tf` | Rule order and app categories |
 
 ## How It Works
@@ -193,6 +193,26 @@ With this pattern:
 - **Removing a rule**: remove the line. The rule is destroyed and the order resource updates.
 - **Reordering**: move lines in the YAML. Only the order resource updates — no rules are re-created.
 
+## Block Rules (v0.4.9+)
+
+The `rules-deny.tf` file creates a block rule for terminated or quarantined users. Block rules require a template — the block page shown to the user.
+
+**Critical:** use the template **display name**, not the file name:
+
+```hcl
+match_criteria_action = {
+  action_name = "block"
+  emit_alert  = true
+  template    = "Generic Block"  # display name — NOT "23.html"
+}
+```
+
+Find template display names in the Netskope UI: **Settings > Security Cloud Platform > NPA > Block Templates**.
+
+Using the file name (e.g. `"23.html"`) returns `"Undefined template: 23.html"`. This is a [known API behavior](https://github.com/jharris-ns/terraform-provider-netskope/blob/main/docs/KNOWN_API_ISSUES.md#13-block-rule-template--display-name-vs-file-name-mismatch) — the API accepts display names on write but returns file names on read. Provider v0.4.9+ handles this automatically with no phantom diffs.
+
+Set `block_template` in your `terraform.tfvars` if your tenant uses a custom template name.
+
 ## Common Mistakes
 
 | Mistake | What Happens | Fix |
@@ -201,6 +221,7 @@ With this pattern:
 | `enabled = 1` | Type error | Use string: `enabled = "1"` |
 | Missing `depends_on` | Rules created in unpredictable order | Add `depends_on` chain |
 | Brackets around app names | "Private app [[name]] doesn't exist" | Use plain strings in list |
+| `template = "23.html"` in block rule | "Undefined template: 23.html" | Use display name: `"Generic Block"` |
 
 ## Modifying Rules
 

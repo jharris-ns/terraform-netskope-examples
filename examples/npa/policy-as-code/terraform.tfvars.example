@@ -20,6 +20,10 @@ blocked_groups = [
   "Security-Quarantine"
 ]
 
+# Display name of the block page template (Settings > Security Cloud Platform > NPA > Block Templates)
+# Use the display name shown in the UI — NOT the file name (e.g. don't use "23.html")
+block_template = "Generic Block"
+
 # Tags used in your private app definitions
 web_app_tags            = ["web-tier"]
 database_app_tags       = ["database-tier"]

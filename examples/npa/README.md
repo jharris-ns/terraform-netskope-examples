@@ -39,7 +39,10 @@ Start here if you're new to Netskope Terraform:
 
 | Example | Difficulty | Description |
 |---------|------------|-------------|
-| [policy-as-code/](./policy-as-code/) | Intermediate | NPA access policies with deny rules and team-based access |
+| [policy-as-code/](./policy-as-code/) | Intermediate | NPA access policies: allow and block rules, team-based access, `netskope_npa_rules_order` (v0.4.13+) |
+| [block-rules-and-ordering/](./block-rules-and-ordering/) | Intermediate | Block-rule lifecycle: templates, in-place updates, import, ordering at scale (v0.4.13+) |
+| [policy-at-scale/](./policy-at-scale/) | Intermediate | Many interleaved block/allow rules from one list with a single order resource; reproduces #125/#129 at scale (v0.4.13+) |
+| [periodic-reauth-policy/](./periodic-reauth-policy/) | Intermediate | Periodic re-authentication rule and its template (v0.4.13+) |
 | [device-classification/](./device-classification/) | Simple | Device posture enforcement via classification tags (v0.4.2+) |
 | [rbac-labels/](./rbac-labels/) | Simple | Label-based access control for resource management (v0.4.0+) |
 | [rbac-roles/](./rbac-roles/) | Simple | Admin role definitions with API group permissions (v0.4.8+) |

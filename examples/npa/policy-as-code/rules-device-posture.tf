@@ -9,7 +9,7 @@ resource "netskope_npa_rules" "require_endpoint_protection" {
   count = length(local.database_apps) > 0 && length(local.device_classification_tags) > 0 ? 1 : 0
 
   rule_name   = "${var.environment}-require-endpoint-protection"
-  description = "Restrict database access to devices with approved endpoint protection"
+  description = "Restrict database access to devices with approved endpoint protection${var.description_suffix}"
   enabled     = "1"
   group_id    = local.default_group.id
 
@@ -36,13 +36,13 @@ resource "netskope_npa_rules" "require_endpoint_protection" {
     ]
   }
 
-  # Place this before the general DBA rule for organizational clarity
-  rule_order = {
-    order = "before"
-    rule_id = length(netskope_npa_rules.dba_readonly_access) > 0 ? (
-      tonumber(netskope_npa_rules.dba_readonly_access[0].id)
-    ) : null
-  }
+  # rule_order sets the position on CREATE only. The provider does not send it
+  # on update (since v0.4.13), so changing it here later has no effect on the
+  # live list; netskope_npa_rules_order (rules-order.tf) owns the final order.
+  # ignore_changes keeps a later edit of this block from producing a no-op diff.
+  rule_order = { order = "bottom" }
 
-  depends_on = [netskope_npa_rules.developer_web_access]
+  lifecycle {
+    ignore_changes = [rule_order]
+  }
 }

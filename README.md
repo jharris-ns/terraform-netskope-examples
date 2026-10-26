@@ -23,7 +23,10 @@ Users with limited Terraform experience should first review [Patterns Used in Ou
 | [local-broker-management](./examples/npa/local-broker-management/) | Simple | Local broker configuration and tokens |
 | [private-app-inventory](./examples/npa/private-app-inventory/) | Intermediate | Manage multiple apps at scale with variables |
 | [publisher-aws](./examples/npa/publisher-aws/) | Intermediate | Deploy NPA publisher in AWS with VPC and NAT |
-| [policy-as-code](./examples/npa/policy-as-code/) | Intermediate | Access policies with deny rules and ordering |
+| [policy-as-code](./examples/npa/policy-as-code/) | Intermediate | Allow and block rules with `netskope_npa_rules_order` (v0.4.13+) |
+| [block-rules-and-ordering](./examples/npa/block-rules-and-ordering/) | Intermediate | Block-rule templates, in-place updates, import, ordering at scale (v0.4.13+) |
+| [policy-at-scale](./examples/npa/policy-at-scale/) | Intermediate | Tens to hundreds of interleaved block/allow rules from one list; the #125/#129 scenario at realistic size (v0.4.13+) |
+| [periodic-reauth-policy](./examples/npa/periodic-reauth-policy/) | Intermediate | Periodic re-authentication rule and its template (v0.4.13+) |
 | [full-deployment](./examples/npa/full-deployment/) | Advanced | End-to-end NPA setup: publishers, apps, and policies |
 | [multi-tenant-deployment](./examples/npa/multi-tenant-deployment/) | Advanced | Replicate private apps to a chosen subset of Netskope tenants |
 
@@ -49,6 +52,7 @@ Users with limited Terraform experience should first review [Patterns Used in Ou
 | New to Terraform | [Terraform Basics](./getting-started/terraform-basics.md) |
 | Deploy your first private app | [Quick Start](./getting-started/quick-start.md) |
 | Project structure and naming | [Best Practices](./guides/best-practices.md) |
+| Upgrading to 0.4.13 (NPA rules: templates, `rule_order`, periodic re-auth) | [Upgrade Guide](./guides/upgrading-to-0.4.13.md) |
 | Upgrading from 0.3.2 | [Upgrade Guide](./guides/upgrading-to-0.3.4.md) |
 
 ## Quick Start

@@ -6,8 +6,8 @@ output "publisher_id" {
 output "private_app_ids" {
   description = "IDs of the private apps created by this example."
   value = {
-    internal_api    = netskope_npa_private_app.internal_api.id
-    internal_portal = netskope_npa_private_app.internal_portal.id
+    internal_api    = netskope_npa_private_app.internal_api.private_app_id
+    internal_portal = netskope_npa_private_app.internal_portal.private_app_id
   }
 }
 

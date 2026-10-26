@@ -12,6 +12,7 @@ credentials.json
 *.pem
 *.key
 .env
+.env.*
 
 # IDE
 .idea/
@@ -28,3 +29,6 @@ Thumbs.db
 # Logs
 *.log
 crash.log
+
+# Internal planning documents (not published)
+docs/plans/

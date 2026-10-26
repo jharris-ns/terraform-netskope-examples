@@ -4,6 +4,8 @@ Manage Netskope NPA access policies using Terraform. This example shows how to c
 
 **Difficulty:** Intermediate
 
+**Provider requirement: >= 0.4.13** (block-rule updates, rule ordering on update, and template handling were all fixed in that release — see [guides/upgrading-to-0.4.13.md](../../../guides/upgrading-to-0.4.13.md)).
+
 ## Quick Start
 
 ```bash
@@ -48,14 +50,17 @@ NPA rules use **most-specific-match** evaluation — the rule whose criteria mos
 ## Rule List Organization
 
 ```
-1. Deny blocked users     <- Broad deny (terminated/quarantined)
-2. Admin SSH access       <- Privileged access (specific users + apps)
+1. Deny blocked users          <- Broad deny (terminated/quarantined)
+2. Admin SSH access            <- Privileged access (specific users + apps)
 3. Admin database access
-4. Developer web access   <- Team-based access
-5. DBA database access
-6. General browser access <- Broad access
-7. Deny all other         <- Catch-all deny
+4. Require endpoint protection <- Posture-gated access
+5. DBA database access         <- Team-based access
+6. Developer web access
+7. General browser access      <- Broad access
+8. Deny all other              <- Catch-all deny (optional, commented out)
 ```
+
+This order is applied by `netskope_npa_rules_order` in `rules-order.tf`. NPA evaluates by most-specific-match, so the list order is for readability and auditing.
 
 ## Best Practice: Use a Dedicated Policy Group
 
@@ -74,6 +79,8 @@ resource "netskope_npa_policy_groups" "terraform" {
 
 Then reference `netskope_npa_policy_groups.terraform.id` as the `group_id` for all rules in this group.
 
+> **`group_order` is create-time only.** Changing `group_order` on an existing policy group currently fails with a backend error (`A value is required for bind parameter 'new_order'`, provider issue [#110](https://github.com/netskopeoss/terraform-provider-netskope/issues/110)). Set it when you create the group and leave it alone afterwards; to move a group, recreate it.
+
 ## Prerequisites
 
 - Private applications already created with appropriate tags (see [private-app-inventory](../private-app-inventory/))
@@ -88,11 +95,12 @@ Then reference `netskope_npa_policy_groups.terraform.id` as the `group_id` for a
 | `main.tf` | Provider configuration |
 | `variables.tf` | User groups, app tags, and block template name |
 | `data.tf` | Discover existing apps and policy groups |
-| `rules-deny.tf` | Block rules for terminated/quarantined users (v0.4.9+) |
+| `rules-deny.tf` | Block rules for terminated/quarantined users |
 | `rules-admin.tf` | Admin/privileged access rules |
 | `rules-teams.tf` | Team-based access rules |
 | `rules-device-posture.tf` | Device posture rules (v0.4.2+) |
 | `rules-general.tf` | General access and optional catch-all deny |
+| `rules-order.tf` | `netskope_npa_rules_order` — the list position of every rule |
 | `outputs.tf` | Rule order and app categories |
 
 ## How It Works
@@ -133,67 +141,31 @@ resource "netskope_npa_rules" "developer_web_access" {
 }
 ```
 
-### Rule Ordering with depends_on
+### Rule Ordering
 
-Rules are ordered using `rule_order` and `depends_on`:
-
-```hcl
-resource "netskope_npa_rules" "rule_2" {
-  rule_order = {
-    order   = "after"
-    rule_id = tonumber(netskope_npa_rules.rule_1.id)
-  }
-
-  depends_on = [netskope_npa_rules.rule_1]
-}
-```
-
-### Bulk Ordering with netskope_npa_rules_order
-
-For larger deployments where you manage many rules with `for_each`, the `netskope_npa_rules_order` resource lets you control the list position of all rules in a single place:
+Every rule sets `rule_order = { order = "bottom" }` with `lifecycle { ignore_changes = [rule_order] }`, and one `netskope_npa_rules_order` resource (`rules-order.tf`) lists all rule IDs in the desired order:
 
 ```hcl
-locals {
-  policies = yamldecode(file("policies.yaml"))
-  policy_map = { for p in local.policies : p.name => p }
-}
+# In each rule
+rule_order = { order = "bottom" }      # create-time placement only
+lifecycle { ignore_changes = [rule_order] }
 
-# Step 1: Create all rules at bottom (parallel, fast)
-resource "netskope_npa_rules" "bulk" {
-  for_each = local.policy_map
-
-  rule_name = each.value.name
-  enabled   = "1"
-  group_id  = netskope_npa_policy_groups.terraform.id
-
-  rule_data = {
-    policy_type           = "private-app"
-    match_criteria_action = { action_name = each.value.action }
-    private_apps          = each.value.apps
-    user_groups           = each.value.groups
-    access_method         = ["Client"]
-  }
-
-  rule_order = { order = "bottom" }
-
-  lifecycle {
-    ignore_changes = [rule_order]
-  }
-}
-
-# Step 2: Set list positions (list order = display order in UI)
+# Once, in rules-order.tf
 resource "netskope_npa_rules_order" "main" {
-  rule_ids = [for p in local.policies : netskope_npa_rules.bulk[p.name].id]
+  rule_ids = local.ordered_rule_ids    # deny first, allow rules below
 }
 ```
 
-With this pattern:
+Why this shape:
 
-- **Adding a rule**: add a line to the YAML at the desired position. Only the new rule is created; existing rules are untouched.
-- **Removing a rule**: remove the line. The rule is destroyed and the order resource updates.
-- **Reordering**: move lines in the YAML. Only the order resource updates — no rules are re-created.
+- `rule_order` is only honoured when a rule is **created**. Since provider v0.4.13 it is never sent on update, so editing a rule leaves it where it is. (Before 0.4.13 the provider re-sent the create-time value on every update, which silently moved edited rules to the bottom of the policy — [#129](https://github.com/netskopeoss/terraform-provider-netskope/issues/129).)
+- `"bottom"` puts a brand-new rule at the end of the list, away from live traffic, until the order resource positions it.
+- `ignore_changes` stops a later edit of the `rule_order` block from showing a plan diff that would apply without effect.
+- `depends_on` chains between rules are not needed for ordering and have been removed.
 
-## Block Rules (v0.4.9+)
+For `for_each`-driven rule sets, the same pattern scales: `rule_ids = [for p in local.policies : netskope_npa_rules.bulk[p.name].id]`. Adding a rule adds one line; removing one removes one line; reordering changes only the order resource. The order resource reads the live order first and moves only rules that are out of place ([#125](https://github.com/netskopeoss/terraform-provider-netskope/issues/125)).
+
+## Block Rules
 
 The `rules-deny.tf` file creates a block rule for terminated or quarantined users. Block rules require a template — the block page shown to the user.
 
@@ -203,15 +175,13 @@ The `rules-deny.tf` file creates a block rule for terminated or quarantined user
 match_criteria_action = {
   action_name = "block"
   emit_alert  = true
-  template    = "Generic Block"  # display name — NOT "23.html"
+  template    = "Generic Block"  # display name — NOT "block_page.html"
 }
 ```
 
-Find template display names in the Netskope UI: **Settings > Security Cloud Platform > NPA > Block Templates**.
+Find template display names in the Netskope UI: **Settings > Security Cloud Platform > NPA > Block Templates**. Set `block_template` in `terraform.tfvars` to a name that exists on your tenant.
 
-Using the file name (e.g. `"23.html"`) returns `"Undefined template: 23.html"`. This is a [known API behavior](https://github.com/jharris-ns/terraform-provider-netskope/blob/main/docs/KNOWN_API_ISSUES.md#13-block-rule-template--display-name-vs-file-name-mismatch) — the API accepts display names on write but returns file names on read. Provider v0.4.9+ handles this automatically with no phantom diffs.
-
-Set `block_template` in your `terraform.tfvars` if your tenant uses a custom template name.
+The API accepts the display name on write but returns the internal file name on read. **Expect one diff per block rule on the first plan after create or import** — `template = "block_page.html" -> "Generic Block"` — apply it, and every later plan is empty. The provider stores the display name in Terraform private state, so this works the same on Terraform Cloud as on a laptop. Sending the file name yourself returns `"Undefined template: block_page.html"`. See the provider README, [Template Name Resolution](https://github.com/netskopeoss/terraform-provider-netskope#template-name-resolution), and [`examples/npa/block-rules-and-ordering`](../block-rules-and-ordering/) for the full lifecycle including in-place updates.
 
 ## Common Mistakes
 
@@ -219,18 +189,19 @@ Set `block_template` in your `terraform.tfvars` if your tenant uses a custom tem
 |---------|--------------|-----|
 | `enabled = true` | Type error | Use string: `enabled = "1"` |
 | `enabled = 1` | Type error | Use string: `enabled = "1"` |
-| Missing `depends_on` | Rules created in unpredictable order | Add `depends_on` chain |
 | Brackets around app names | "Private app [[name]] doesn't exist" | Use plain strings in list |
-| `template = "23.html"` in block rule | "Undefined template: 23.html" | Use display name: `"Generic Block"` |
+| `template = "block_page.html"` in block rule | "Undefined template: block_page.html" | Use display name: `"Generic Block"` |
+| Treating the first `"block_page.html" -> "Generic Block"` diff as a bug | One in-place update after create/import | Apply it once; later plans are empty |
+| Editing `rule_order` to move an existing rule | Plan diff applies with no effect | Change its position in `rules-order.tf` |
+| Changing `group_order` on an existing policy group | Backend error (#110) | Set on create only |
 
 ## Modifying Rules
 
 ### Adding a New Rule
 
-1. Add the rule resource to the appropriate file
-2. Set `rule_order` to position it correctly
-3. Update `depends_on` for rules that should come after it
-4. Run `terraform plan` to verify ordering
+1. Add the rule resource to the appropriate file with `rule_order = { order = "bottom" }` and `ignore_changes = [rule_order]`
+2. Insert its ID at the desired position in `local.ordered_rule_ids` (`rules-order.tf`)
+3. Run `terraform plan` — the new rule is created and only the rules that must shift are moved
 
 ### Disabling a Rule
 

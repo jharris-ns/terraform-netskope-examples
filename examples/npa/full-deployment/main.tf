@@ -35,7 +35,7 @@ terraform {
   required_providers {
     netskope = {
       source  = "netskopeoss/netskope"
-      version = ">= 0.3.4"
+      version = ">= 0.4.13"
     }
   }
 }
@@ -174,8 +174,16 @@ resource "netskope_npa_rules" "web_app_access" {
     user_type = "user"
   }
 
+  # rule_order sets the position on CREATE only; the provider does not send it
+  # on update (since v0.4.13). ignore_changes keeps a later edit of this block
+  # from producing a no-op plan diff. For larger rule sets, see
+  # examples/npa/block-rules-and-ordering (netskope_npa_rules_order).
   rule_order = {
     order = "top"
+  }
+
+  lifecycle {
+    ignore_changes = [rule_order]
   }
 }
 
@@ -202,10 +210,13 @@ resource "netskope_npa_rules" "ssh_access" {
     user_type = "user"
   }
 
+  # Create-time placement relative to another rule (see note above).
   rule_order = {
     order   = "after"
     rule_id = tonumber(netskope_npa_rules.web_app_access.id)
   }
 
-  depends_on = [netskope_npa_rules.web_app_access]
+  lifecycle {
+    ignore_changes = [rule_order]
+  }
 }

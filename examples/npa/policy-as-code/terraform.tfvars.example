@@ -16,8 +16,8 @@ dba_groups = [
 ]
 
 blocked_groups = [
-  "Terminated-Users",
-  "Security-Quarantine"
+  # "Terminated-Users",
+  # "Security-Quarantine",
 ]
 
 # Display name of the block page template (Settings > Security Cloud Platform > NPA > Block Templates)

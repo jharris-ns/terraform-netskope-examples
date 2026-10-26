@@ -8,18 +8,20 @@
 #   allow_managed_devices  — any user, managed devices only (Client access)
 #   allow_all_client       — catch-all for the clientless portal
 #
-# device_classification_id accepts both string and numeric values:
-#   "managed"   — built-in managed device state (fixed in v0.4.9, issue #74)
-#   "unmanaged" — built-in unmanaged device state
-#   "16715"     — numeric custom classification tag ID
+# Two separate fields control device classification:
+#   classification           = ["managed"]   — built-in managed device state
+#   classification           = ["unmanaged"] — built-in unmanaged device state
+#   device_classification_id = ["16715"]     — numeric custom classification tag ID
+# Do NOT put "managed"/"unmanaged" in device_classification_id.
 #
 # All rules use:
-#   rule_order = { order = "bottom" }     — new rules appear at the bottom,
-#                                           away from live traffic, until the
-#                                           npa_rules_order resource positions them
-#   lifecycle.ignore_changes = [rule_order] — prevents Terraform from re-sending
-#                                              rule_order on every update (the API
-#                                              ignores it on PUT but it causes drift)
+#   rule_order = { order = "bottom" }       — new rules appear at the bottom,
+#                                             away from live traffic, until the
+#                                             npa_rules_order resource positions
+#                                             them. rule_order is CREATE-time only;
+#                                             the provider never sends it on update.
+#   lifecycle.ignore_changes = [rule_order] — a later edit of rule_order would
+#                                             otherwise show a no-op plan diff.
 # =============================================================================
 
 # ---------------------------------------------------------------------------
@@ -31,9 +33,9 @@ resource "netskope_npa_rules" "allow_admins" {
   count = length(var.admin_user_groups) > 0 ? 1 : 0
 
   rule_name   = "${var.environment}-allow-admins"
-  description = "Unrestricted allow for admin groups — no device posture check"
+  description = "Unrestricted allow for admin groups — no device posture check${var.description_suffix}"
   enabled     = "1"
-  group_id    = var.policy_group_id
+  group_id    = local.policy_group.id
 
   rule_data = {
     policy_type  = "private-app"
@@ -72,9 +74,9 @@ resource "netskope_npa_rules" "allow_admins" {
 #   extra_managed_classification_ids = ["16715", "16758"]
 resource "netskope_npa_rules" "allow_managed_devices" {
   rule_name   = "${var.environment}-allow-managed-devices"
-  description = "Allow access only from enrolled (managed) corporate devices"
+  description = "Allow access only from enrolled (managed) corporate devices${var.description_suffix}"
   enabled     = "1"
-  group_id    = var.policy_group_id
+  group_id    = local.policy_group.id
 
   rule_data = {
     policy_type  = "private-app"
@@ -88,9 +90,15 @@ resource "netskope_npa_rules" "allow_managed_devices" {
       netskope_npa_private_app.internal_api.private_app_name,
     ]
 
-    # Combine the built-in "managed" value with any additional tag IDs supplied
-    # via the variable. In most cases this is just ["managed"].
-    device_classification_id = concat(["managed"], var.extra_managed_classification_ids)
+    # "managed" is the built-in classification for corporate devices enrolled in MDM.
+    # It is set via the classification field (not device_classification_id, which is
+    # for custom numeric tag IDs from Settings > Security Cloud Platform > Device
+    # Classification).
+    classification = ["managed"]
+
+    # Optional: numeric custom classification tag IDs (e.g. "16715") supplied via
+    # the variable. Leave empty to restrict only by the built-in managed state.
+    device_classification_id = var.extra_managed_classification_ids
 
     access_method = ["Client"]
     user_type     = "user"
@@ -111,9 +119,9 @@ resource "netskope_npa_rules" "allow_managed_devices" {
 # device state.
 resource "netskope_npa_rules" "allow_all_clientless" {
   rule_name   = "${var.environment}-allow-all-clientless"
-  description = "Default allow for clientless browser access to the portal"
+  description = "Default allow for clientless browser access to the portal${var.description_suffix}"
   enabled     = "1"
-  group_id    = var.policy_group_id
+  group_id    = local.policy_group.id
 
   rule_data = {
     policy_type  = "private-app"

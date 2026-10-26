@@ -564,6 +564,15 @@ NPA policy uses **most-specific-match** semantics — not top-to-bottom evaluati
 on user group + device posture + app wins over a rule matching on app alone, regardless of list
 position. `rule_order` controls UI list placement for readability, not evaluation priority.
 
+> **`rule_order` is create-time only (provider >= 0.4.13).** It positions a rule when it is
+> created and is never sent on update, so editing a rule leaves it where it is. The pattern used
+> throughout the examples is `rule_order = { order = "bottom" }` plus
+> `lifecycle { ignore_changes = [rule_order] }` on every rule, with a single
+> `netskope_npa_rules_order` resource owning the final list order. `depends_on` chains between
+> rules are not needed for ordering. See
+> [`examples/npa/block-rules-and-ordering`](https://github.com/jharris-ns/terraform-netskope-examples/tree/main/examples/npa/block-rules-and-ordering).
+> The snippets below show `rule_order` for brevity; apply the pattern above in real configurations.
+
 ### Explicit rules (named apps)
 
 Best for a small number of well-known apps or one-off rules:
@@ -757,7 +766,7 @@ Use `b_negate_net_location = true` to invert the match — the rule applies when
 **not** in any of the listed locations (useful for deny rules targeting off-network access).
 
 ```hcl
-# Catch-all deny (optional — requires provider >= 0.4.9 and a block page template)
+# Catch-all deny (optional — requires provider >= 0.4.13 and a block page template)
 resource "netskope_npa_rules" "deny_all_other" {
   count = length(local.all_app_names) > 0 ? 1 : 0
 
@@ -774,7 +783,9 @@ resource "netskope_npa_rules" "deny_all_other" {
       emit_alert  = true
       # Use the template DISPLAY NAME shown in the Netskope UI
       # (Settings > Security Cloud Platform > NPA > Block Templates)
-      # Do NOT use the file name (e.g. "23.html") — the API returns "Undefined template: 23.html"
+      # Do NOT use the file name (e.g. "block_page.html") — the API returns "Undefined template".
+      # The API returns the file name on read, so the FIRST plan after create or import shows
+      # one diff: template = "block_page.html" -> "Generic Block". Apply it; later plans are empty.
       template = "Generic Block"
     }
 
@@ -783,15 +794,57 @@ resource "netskope_npa_rules" "deny_all_other" {
     user_type     = "user"
   }
 
-  rule_order = { order = "bottom" }
+  rule_order = { order = "bottom" }     # create-time only; list it last in netskope_npa_rules_order
 
-  depends_on = [
-    netskope_npa_rules.developer_web_access,
-    netskope_npa_rules.admin_infra_access,
-    netskope_npa_rules.dba_database_access,
-  ]
+  lifecycle {
+    ignore_changes = [rule_order]
+  }
 }
 ```
+
+### Periodic re-authentication rules
+
+`action_name = "periodic_reauth"` keeps access open but forces users to re-authenticate at an
+interval. The rule carries a `periodic_reauth` block and a notification `template`:
+
+```hcl
+resource "netskope_npa_rules" "reauth_finance" {
+  rule_name = "prod-reauth-finance"
+  enabled   = "1"
+  group_id  = local.policy_group.id
+
+  rule_data = {
+    policy_type = "private-app"
+
+    match_criteria_action = {
+      action_name = "periodic_reauth"
+      template    = var.reauth_template   # display name — never a filename; see below
+    }
+
+    periodic_reauth = {
+      reauth_interval      = "8"          # quoted number
+      reauth_interval_unit = "hours"      # "hours" or "days"
+    }
+
+    private_apps  = [netskope_npa_private_app.finance_app.private_app_name]
+    user_groups   = ["finance-team"]
+    access_method = ["Client"]            # periodic_reauth is a Client-access feature
+    os            = ["Windows", "Mac"]
+  }
+
+  rule_order = { order = "bottom" }
+  lifecycle { ignore_changes = [rule_order] }
+}
+```
+
+**The template field differs from block rules — in the other direction.** For `block` the API
+resolves the display name to a filename and returns the filename on read. For `periodic_reauth`
+the API stores the display name **verbatim**, returns it on read, and **rejects filenames**
+(`Undefined template: 3.html`). Both were verified on two tenants. So: always use the display
+name; never a filename; and expect no converging diff for `periodic_reauth` rules (state equals
+config). The provider does not use the template catalogue endpoint. A rule created through the
+API may show no template selected in the UI editor (the UI stores templates by filename); see
+[`examples/npa/periodic-reauth-policy`](https://github.com/jharris-ns/terraform-netskope-examples/tree/main/examples/npa/periodic-reauth-policy).
 
 ### Variables for policy rules
 

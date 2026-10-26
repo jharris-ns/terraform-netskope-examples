@@ -1,16 +1,8 @@
 # Block Rules and Rule Ordering
 
-Demonstrates the full lifecycle of NPA block rules and large-scale rule ordering. Exercises every code path that was broken or unclear in [#74](https://github.com/netskopeoss/terraform-provider-netskope/issues/74), [#79](https://github.com/netskopeoss/terraform-provider-netskope/issues/79), [#106](https://github.com/netskopeoss/terraform-provider-netskope/issues/106), [#124](https://github.com/netskopeoss/terraform-provider-netskope/issues/124), and [#125](https://github.com/netskopeoss/terraform-provider-netskope/issues/125).
+Demonstrates the full lifecycle of NPA block rules and rule ordering at scale: creating block rules with a template, updating them in place, importing UI-created rules, and letting one `netskope_npa_rules_order` resource own the list position of every rule.
 
-**Provider requirement: >= 0.4.12**
-
-| Fix | Version |
-|---|---|
-| Block rule in-place update fails with "template field is required" (#124) | 0.4.12 |
-| `npa_rules_order` re-PATCHes every rule on any `rule_ids` change (#125) | 0.4.12 |
-| `device_classification_id` rejects `"managed"` / `"unmanaged"` strings (#74) | 0.4.9 |
-| Read crashes on rules with `classification` set (#106) | 0.4.9 |
-| Block template drifts from display name to `.html` filename (#79) | 0.4.4 |
+**Provider requirement: >= 0.4.13.** Earlier releases had bugs in exactly the paths this example exercises — block-rule updates failed ([#124](https://github.com/netskopeoss/terraform-provider-netskope/issues/124)), every update silently moved the rule to the bottom of the policy ([#129](https://github.com/netskopeoss/terraform-provider-netskope/issues/129)), and the template field showed a diff on every Terraform Cloud run ([#79](https://github.com/netskopeoss/terraform-provider-netskope/issues/79), [#105](https://github.com/netskopeoss/terraform-provider-netskope/issues/105), [#129](https://github.com/netskopeoss/terraform-provider-netskope/issues/129)). If you are upgrading, read [guides/upgrading-to-0.4.13.md](../../../guides/upgrading-to-0.4.13.md) first.
 
 ## What this example creates
 
@@ -30,65 +22,73 @@ Demonstrates the full lifecycle of NPA block rules and large-scale rule ordering
 
 ```bash
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your policy_group_id and block_template
+# Edit terraform.tfvars: set block_template to a template display name that exists on your tenant
 terraform init
-terraform plan
-terraform apply
+terraform apply          # creates everything
+terraform apply          # second apply: converges the template field (see below) — expected
+terraform plan           # empty
 ```
 
 ## Block rule template field
 
-Block rules (and periodic re-authentication rules) require a `template` in `match_criteria_action`. Always use the **display name** shown in the Netskope UI:
-
-> Settings > Security Cloud Platform > NPA > Block Templates
+Block rules require a `template` in `match_criteria_action`. Use the **display name** shown in the Netskope UI under *Settings > Security Cloud Platform > NPA > Block Templates*:
 
 ```hcl
 match_criteria_action = {
   action_name = "block"
   emit_alert  = true
-  template    = "Generic Block"     # display name — NOT "5.html"
+  template    = "Generic Block"     # display name — NOT "block_page.html"
 }
 ```
 
-### How the provider translates names
+The API accepts the display name on write but returns an internal filename (for example `block_page.html`) on read. The provider reconciles the two using Terraform resource private state, which is stored in your state file, so the behaviour is the same on a laptop, in CI and on Terraform Cloud, and it does **not** depend on any extra API endpoint for block rules.
 
-The provider calls `GET /api/v2/templates/usernotifications` once per session to build a bidirectional cache of display names ↔ `.html` filenames. When this succeeds:
+### What to expect in `terraform plan`
 
-- **On create/update**: the display name from config is sent to the API — no transformation needed for block rules (the API translates it server-side).
-- **On read (GET)**: the API returns `"5.html"`; the provider translates it back to `"Generic Block"` before storing in state. State always holds the display name. Plans are clean.
+**First plan after creating or importing a block rule** — one diff per block rule:
 
-### When the templates API returns 403
+```
+~ rule_data = {
+    ~ match_criteria_action = {
+        ~ template = "block_page.html" -> "Generic Block"
+      }
+  }
+```
 
-If `GET /api/v2/templates/usernotifications` is not accessible with your API token, the provider degrades gracefully:
+Apply it. This is the provider recording the display name; nothing changes in the tenant. **Every plan after that is empty**, in every process.
 
-1. On the **first `terraform plan`** after a fresh `terraform init` (or after any operation that stores `"5.html"` in state), you will see:
-   ```
-   ~ template = "5.html" -> "Generic Block"
-   ```
-2. **Apply it** — the update sends `"Generic Block"`, which the API accepts. State is corrected.
-3. **Subsequent plans in the same session** are clean (`"Generic Block"` == `"Generic Block"`).
+**Updating a block rule** — change `emit_alert`, `user_groups`, `private_apps`, or anything else, and the plan shows only that change. The apply succeeds and the rule keeps its position in the policy list.
 
-This is a known limitation when the templates API is unavailable. Supply the display name in config (not the filename) — the provider handles the rest.
+**Changing the template** — change `block_template` to another display name and the plan shows the change; apply it and the new template is in effect.
 
-> **Verify access:** ensure your API token can call `GET /api/v2/templates/usernotifications`. If it returns 403, contact your Netskope administrator to grant access.
+### Known limitation
+
+If someone changes a block rule's template in the Netskope UI to a *different* template while your configuration still names the original, Terraform does not detect it. Changing the display name in configuration is always detected.
 
 ## Device classification
 
-`device_classification_id` accepts both string and numeric values:
+Two separate fields control device classification:
 
-| Value | Meaning |
-|---|---|
-| `"managed"` | Built-in: device enrolled in corporate MDM |
-| `"unmanaged"` | Built-in: device not enrolled in corporate MDM |
-| `"16715"` | Numeric ID of a custom classification tag |
+| Field | Accepts | Example |
+|---|---|---|
+| `classification` | Built-in string values: `"managed"` or `"unmanaged"` | `classification = ["managed"]` |
+| `device_classification_id` | Numeric custom tag IDs only | `device_classification_id = ["16715"]` |
+
+**Do NOT put `"managed"` or `"unmanaged"` in `device_classification_id`** — the API rejects string values there with `"device_classification_id should be integer"`.
 
 ```hcl
-# Built-in string values (supported since v0.4.9)
-device_classification_id = ["managed"]
-device_classification_id = ["unmanaged"]
+# Built-in: block devices not enrolled in corporate MDM
+classification = ["unmanaged"]
 
-# Mixed: managed plus a custom tag
-device_classification_id = ["managed", "16715"]
+# Built-in: allow only enrolled (managed) devices
+classification = ["managed"]
+
+# Custom tag ID (numeric, from Settings > Device Classification)
+device_classification_id = ["16715"]
+
+# Combined: built-in managed + a custom tag
+classification            = ["managed"]
+device_classification_id  = ["16715"]
 ```
 
 Find custom tag IDs with:
@@ -99,41 +99,39 @@ output "options" { value = data.netskope_device_classification_options_list.all.
 
 ## Importing existing UI-created block rules
 
-To bring a block rule created in the Netskope UI under Terraform management:
-
 **1. Find the rule ID** — from the Netskope UI URL or via the API:
 ```hcl
 data "netskope_npa_rules_list" "all" {}
 output "rules" { value = data.netskope_npa_rules_list.all.data }
 ```
 
-**2. Add the resource block** in `rules-block.tf` with the correct display name in `template`.
+**2. Add the resource block** in `rules-block.tf` with the template **display name**.
 
 **3. Import:**
 ```bash
 terraform import netskope_npa_rules.block_users <rule_id>
 ```
 
-**4. Plan** — you should see exactly one diff:
-```
-~ template = "5.html" -> "Generic Block"
-```
-This is expected. The import stored the raw API filename in state; the plan corrects it to your config display name.
+**4. Plan** — exactly one diff, `template = "block_page.html" -> "Generic Block"`. Apply it.
 
-**5. Apply** — the rule is now fully managed. Subsequent plans are clean.
+**5. Plan again** — empty. The rule is fully managed.
 
 ## Rule ordering
 
-`netskope_npa_rules_order` manages the list position of all rules. NPA evaluates rules by **most-specific-match**, not top-to-bottom, so list position is for operational visibility only.
+`netskope_npa_rules_order` manages the list position of all rules. NPA evaluates rules by **most-specific-match**, not top-to-bottom, so list position is for operational visibility and auditing.
 
-### The recommended pattern
+### The pattern
 
 Every rule resource:
 ```hcl
-rule_order = { order = "bottom" }   # lands at the bottom on create
+# rule_order sets the position on CREATE only. The provider does not send it on
+# update (since v0.4.13), so changing it here later has no effect on the live
+# list; use netskope_npa_rules_order for that. ignore_changes keeps a later
+# edit of this block from producing a no-op plan diff.
+rule_order = { order = "bottom" }
 
 lifecycle {
-  ignore_changes = [rule_order]     # prevents re-sending rule_order on update
+  ignore_changes = [rule_order]
 }
 ```
 
@@ -149,36 +147,25 @@ resource "netskope_npa_rules_order" "main" {
 }
 ```
 
-### Removing a rule (v0.4.12 behaviour)
+Why `"bottom"` on create: a new rule lands at the end of the list, away from live traffic, until `netskope_npa_rules_order` places it. Why `ignore_changes`: `rule_order` is not returned by the API and is only used on create; without `ignore_changes`, editing the block later would show a diff that applies without effect.
 
-In v0.4.11, removing one ID from `rule_ids` caused the provider to PATCH every remaining rule to `top` — O(n) API calls, 4+ minutes for 200 rules, with the live list visibly scrambled mid-apply.
+### Removing a rule
 
-In v0.4.12, the provider reads the live order first and only moves rules that are out of place. Removing a rule that was already in relative order sends **zero PATCHes** to the API.
-
-Steps:
 1. Remove the rule resource from `rules-block.tf` or `rules-allow.tf`.
 2. Remove its ID reference from `local.ordered_rule_ids` in `rules-order.tf`.
-3. `terraform apply` — the rule is destroyed; no other rules are moved.
+3. `terraform apply` — the rule is destroyed. `netskope_npa_rules_order` reads the live order first and moves nothing if the remaining rules are already in the right relative order ([#125](https://github.com/netskopeoss/terraform-provider-netskope/issues/125), fixed in 0.4.12).
 
 ### Adding a rule
 
-1. Add the rule resource with `rule_order = { order = "bottom" }`.
+1. Add the rule resource with `rule_order = { order = "bottom" }` and `ignore_changes = [rule_order]`.
 2. Insert its ID at the desired position in `local.ordered_rule_ids`.
-3. `terraform apply` — the rule is created, then only the rules that need to shift to make room are PATCHed.
+3. `terraform apply` — the rule is created at the bottom, then only the rules that need to shift are moved.
 
-## Testing the fix for issue #124
+## Verifying the update path on your tenant
 
-To verify that block rule updates work correctly on your tenant:
-
-1. Apply this example (creates all rules).
-2. Change `emit_alert` on one of the block rules:
-   ```hcl
-   match_criteria_action = {
-     action_name = "block"
-     emit_alert  = true      # was false
-     template    = var.block_template
-   }
-   ```
-3. `terraform plan` — should show a clean in-place update with no template drift.
-4. `terraform apply` — should succeed with no "template field is required" error.
-5. `terraform plan` again — should show no changes.
+1. Apply this example twice (the second apply converges the template field).
+2. Change `emit_alert` on `block_unmanaged_devices` from `false` to `true`.
+3. `terraform plan` — exactly one attribute changes; no template diff.
+4. `terraform apply` — succeeds.
+5. In the Netskope UI, confirm the block rules are still above the allow rules.
+6. `terraform plan` — empty.

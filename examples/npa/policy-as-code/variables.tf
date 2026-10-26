@@ -69,3 +69,17 @@ variable "required_device_tags" {
   type        = list(string)
   default     = [] # Empty by default - add your tenant's device classification tag names
 }
+
+# ---------------------------------------------------------------------------
+# Test hook
+# ---------------------------------------------------------------------------
+
+variable "description_suffix" {
+  description = <<-EOT
+    Optional text appended to every rule description. Used by the integration
+    test harness to exercise an in-place update of every rule (verifying that
+    updates succeed and do not change rule positions). Leave empty normally.
+  EOT
+  type        = string
+  default     = ""
+}

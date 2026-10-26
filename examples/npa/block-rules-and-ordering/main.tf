@@ -1,18 +1,16 @@
 # Block Rules and Rule Ordering Example
 #
-# Demonstrates the full lifecycle of NPA block rules and large-scale rule
-# ordering. Covers scenarios from GitHub issues #74, #79, #106, #124, #125:
+# Demonstrates the full lifecycle of NPA block rules and rule ordering:
 #
 #   - Block rules with template display names (not .html filenames)
 #   - In-place updates to block rules (emit_alert, user_groups, etc.)
 #   - Blocking by user group and by device classification ("unmanaged")
 #   - Allowing only managed devices ("managed" string value)
-#   - netskope_npa_rules_order managing the full list position of all rules
-#   - Removing a rule from rule_ids without re-PATCHing every other rule
+#   - netskope_npa_rules_order owning the list position of all rules
 #
-# Provider >= 0.4.12 is required:
-#   - 0.4.12 fixes block rule in-place updates (#124)
-#   - 0.4.12 fixes npa_rules_order full-reshuffle on any change (#125)
+# Provider >= 0.4.13 is required. Earlier releases failed block-rule updates
+# (#124), moved rules to the bottom on every update (#129), and showed a
+# template diff on every Terraform Cloud run (#79, #105, #129).
 #
 # =============================================================================
 # IMPORTANT NOTES
@@ -21,18 +19,21 @@
 # 1. block_template must be the DISPLAY NAME shown in the Netskope UI:
 #      Settings > Security Cloud Platform > NPA > Block Templates
 #    e.g. "Generic Block" or "Private Apps Block Template"
-#    Do NOT use the underlying filename (e.g. "5.html").
-#    See README.md for behaviour when the templates API returns 403.
+#    Do NOT use the underlying filename (e.g. "block_page.html").
+#    Expect ONE "block_page.html" -> "<name>" diff on the first plan after
+#    create or import; apply it, then plans are empty. See README.md.
 #
-# 2. device_classification_id accepts both string and numeric values:
-#      "managed"   — built-in managed device classification
-#      "unmanaged" — built-in unmanaged device classification
-#      "16715"     — numeric custom classification tag ID
-#    String support was fixed in v0.4.9 (#74).
+# 2. Two separate fields control device classification:
+#      classification           — built-in states: "managed" or "unmanaged"
+#      device_classification_id — numeric custom tag IDs only (e.g. ["16715"])
+#    Do NOT put "managed"/"unmanaged" in device_classification_id — the
+#    provider converts that list to integers and rejects non-numeric values
+#    (provider issue #74). Use classification instead.
 #
 # 3. NPA uses most-specific-match, not top-to-bottom evaluation.
 #    Rule list position is for organisational clarity only.
-#    Use rule_order = { order = "bottom" } + lifecycle.ignore_changes on all
+#    rule_order sets the position on CREATE only; the provider does not send it
+#    on update. Use rule_order = { order = "bottom" } + ignore_changes on all
 #    rules, and control final positions via netskope_npa_rules_order.
 #
 # 4. Import existing UI-created block rules with:
@@ -47,12 +48,29 @@ terraform {
   required_providers {
     netskope = {
       source  = "netskopeoss/netskope"
-      version = ">= 0.4.12"
+      version = ">= 0.4.13"
     }
   }
 }
 
 provider "netskope" {}
+
+# ---------------------------------------------------------------------------
+# Policy group
+# ---------------------------------------------------------------------------
+# Look up all groups and pick the one matching var.policy_group_name,
+# or fall back to the built-in "Default" group.
+data "netskope_npa_policy_groups_list" "all" {}
+
+locals {
+  policy_group = var.policy_group_name != null ? (
+    [for pg in data.netskope_npa_policy_groups_list.all.data : pg
+    if pg.group_name == var.policy_group_name][0]
+    ) : (
+    [for pg in data.netskope_npa_policy_groups_list.all.data : pg
+    if pg.group_name == "Default"][0]
+  )
+}
 
 # ---------------------------------------------------------------------------
 # Publisher
@@ -111,5 +129,4 @@ resource "netskope_npa_private_app" "internal_portal" {
   use_publisher_dns       = true
   trust_self_signed_certs = false
   clientless_access       = true
-  is_user_portal_app      = true
 }

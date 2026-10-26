@@ -8,7 +8,7 @@ resource "netskope_npa_rules" "developer_web_access" {
   count = length(local.web_apps) > 0 ? 1 : 0
 
   rule_name   = "${var.environment}-developer-web-access"
-  description = "Allow developers browser access to web applications"
+  description = "Allow developers browser access to web applications${var.description_suffix}"
   enabled     = "1"
 
   rule_data = {
@@ -32,8 +32,14 @@ resource "netskope_npa_rules" "developer_web_access" {
     user_type = "user"
   }
 
-  rule_order = {
-    order = "bottom"
+  # rule_order sets the position on CREATE only. The provider does not send it
+  # on update (since v0.4.13), so changing it here later has no effect on the
+  # live list; netskope_npa_rules_order (rules-order.tf) owns the final order.
+  # ignore_changes keeps a later edit of this block from producing a no-op diff.
+  rule_order = { order = "bottom" }
+
+  lifecycle {
+    ignore_changes = [rule_order]
   }
 }
 
@@ -42,7 +48,7 @@ resource "netskope_npa_rules" "dba_readonly_access" {
   count = length(local.database_apps) > 0 ? 1 : 0
 
   rule_name   = "${var.environment}-dba-database-access"
-  description = "Allow DBA team access to databases"
+  description = "Allow DBA team access to databases${var.description_suffix}"
   enabled     = "1"
 
   rule_data = {
@@ -63,9 +69,13 @@ resource "netskope_npa_rules" "dba_readonly_access" {
     user_type = "user"
   }
 
-  rule_order = {
-    order = "bottom"
-  }
+  # rule_order sets the position on CREATE only. The provider does not send it
+  # on update (since v0.4.13), so changing it here later has no effect on the
+  # live list; netskope_npa_rules_order (rules-order.tf) owns the final order.
+  # ignore_changes keeps a later edit of this block from producing a no-op diff.
+  rule_order = { order = "bottom" }
 
-  depends_on = [netskope_npa_rules.developer_web_access]
+  lifecycle {
+    ignore_changes = [rule_order]
+  }
 }

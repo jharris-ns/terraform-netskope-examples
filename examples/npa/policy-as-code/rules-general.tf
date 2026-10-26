@@ -10,7 +10,7 @@ resource "netskope_npa_rules" "general_browser_access" {
   count = length(local.portal_apps) > 0 ? 1 : 0
 
   rule_name   = "${var.environment}-general-browser-access"
-  description = "Allow all authenticated users browser access to portal apps"
+  description = "Allow all authenticated users browser access to portal apps${var.description_suffix}"
   enabled     = "1"
 
   rule_data = {
@@ -32,14 +32,20 @@ resource "netskope_npa_rules" "general_browser_access" {
     access_method = ["Clientless"]
   }
 
-  rule_order = {
-    order = "bottom"
+  # rule_order sets the position on CREATE only. The provider does not send it
+  # on update (since v0.4.13), so changing it here later has no effect on the
+  # live list; netskope_npa_rules_order (rules-order.tf) owns the final order.
+  # ignore_changes keeps a later edit of this block from producing a no-op diff.
+  rule_order = { order = "bottom" }
+
+  lifecycle {
+    ignore_changes = [rule_order]
   }
 }
 
 # Catch-all deny rule (optional - for explicit deny-by-default)
 # Uncomment to enable a default-deny posture for any access not explicitly allowed above.
-# Requires provider >= 0.4.9 and a block page template configured in the Netskope UI.
+# Requires a block page template configured in the Netskope UI.
 # See rules-deny.tf for a targeted block rule example (blocked users).
 #
 # resource "netskope_npa_rules" "deny_all_other" {
@@ -57,7 +63,7 @@ resource "netskope_npa_rules" "general_browser_access" {
 #     match_criteria_action = {
 #       action_name = "block"
 #       emit_alert  = true
-#       # Use the template DISPLAY NAME (e.g. "Generic Block"), NOT the file name (e.g. "23.html")
+#       # Use the template DISPLAY NAME (e.g. "Generic Block"), NOT the file name (e.g. "block_page.html")
 #       template = var.block_template
 #     }
 #
@@ -70,12 +76,12 @@ resource "netskope_npa_rules" "general_browser_access" {
 #     access_method = ["Client", "Clientless"]
 #   }
 #
-#   rule_order = {
-#     order = "bottom"
-#   }
+#   rule_order = { order = "bottom" }
 #
-#   # Ensure this is truly last
-#   depends_on = [
-#     netskope_npa_rules.general_browser_access
-#   ]
+#   lifecycle {
+#     ignore_changes = [rule_order]
+#   }
 # }
+#
+# Then add netskope_npa_rules.deny_all_other[0].id as the LAST entry in
+# local.ordered_rule_ids (rules-order.tf) so it sits at the bottom of the list.

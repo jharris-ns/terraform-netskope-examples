@@ -3,15 +3,14 @@
 
 environment = "prod"
 
-# Required: ID of the NPA policy group to place rules into.
-# Find it in the Netskope UI or with:
-#   data "netskope_npa_policy_groups_list" "all" {}
-#   output "groups" { value = data.netskope_npa_policy_groups_list.all.data }
-policy_group_id = "<your-policy-group-id>"
+# Optional: name of the NPA policy group to place rules into.
+# Defaults to the built-in "Default" group if not set.
+# policy_group_name = "My-Custom-Group"
 
 # Required: display name of the block page template in the Netskope UI.
 #   Settings > Security Cloud Platform > NPA > Block Templates
-# Use the display name, NOT the underlying filename (e.g. "5.html").
+# Use the display name, NOT the underlying filename (e.g. "block_page.html").
+# "Generic Block" may not exist on your tenant — check the UI list first.
 block_template = "Generic Block"
 
 # Optional: user groups to block (terminated / quarantined accounts).
